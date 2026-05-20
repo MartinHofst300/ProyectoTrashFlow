@@ -3,129 +3,186 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi Hosting Funciona 🚀</title>
+    <title>Proyecto OTR</title>
 
     <style>
         *{
             margin:0;
             padding:0;
             box-sizing:border-box;
-            font-family: Arial, Helvetica, sans-serif;
+            font-family: 'Segoe UI', sans-serif;
         }
 
         body{
             height:100vh;
+            overflow:hidden;
             display:flex;
             justify-content:center;
             align-items:center;
-            background: linear-gradient(135deg, #0f172a, #1e293b, #2563eb);
-            overflow:hidden;
+            background:
+            radial-gradient(circle at top left, #38bdf8 0%, transparent 30%),
+            radial-gradient(circle at bottom right, #0ea5e9 0%, transparent 30%),
+            linear-gradient(135deg, #020617, #0f172a, #111827);
+            color:white;
+            position:relative;
+        }
+
+        .grid{
+            position:absolute;
+            width:100%;
+            height:100%;
+            background-image:
+            linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size:40px 40px;
+            animation:mover 10s linear infinite;
         }
 
         .card{
+            position:relative;
+            z-index:2;
             width:90%;
-            max-width:700px;
-            padding:50px;
-            border-radius:25px;
-            background: rgba(255,255,255,0.08);
-            backdrop-filter: blur(10px);
-            border:1px solid rgba(255,255,255,0.15);
+            max-width:750px;
+            padding:60px;
+            border-radius:30px;
+            background:rgba(15,23,42,0.65);
+            backdrop-filter:blur(18px);
+            border:1px solid rgba(255,255,255,0.08);
+            box-shadow:
+            0 0 30px rgba(14,165,233,0.25),
+            0 25px 60px rgba(0,0,0,0.5);
             text-align:center;
-            color:white;
-            box-shadow:0 20px 50px rgba(0,0,0,0.4);
-            animation: aparecer 1s ease;
+            animation:entrada 1s ease;
+        }
+
+        .logo{
+            width:90px;
+            height:90px;
+            margin:auto;
+            margin-bottom:25px;
+            border-radius:50%;
+            background:linear-gradient(135deg,#38bdf8,#0ea5e9);
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            font-size:2.2rem;
+            font-weight:bold;
+            box-shadow:0 0 25px rgba(56,189,248,0.6);
         }
 
         h1{
-            font-size:3rem;
-            margin-bottom:20px;
+            font-size:3.5rem;
+            margin-bottom:15px;
+            background:linear-gradient(to right,#ffffff,#7dd3fc);
+            -webkit-background-clip:text;
+            -webkit-text-fill-color:transparent;
         }
 
         p{
             font-size:1.2rem;
-            color:#dbeafe;
-            margin-bottom:30px;
+            color:#cbd5e1;
+            line-height:1.7;
+            margin-bottom:35px;
         }
 
         .estado{
-            display:inline-block;
-            padding:15px 30px;
-            background:#22c55e;
-            color:white;
-            border-radius:50px;
-            font-weight:bold;
+            display:inline-flex;
+            align-items:center;
+            gap:12px;
+            padding:16px 35px;
+            border-radius:60px;
+            background:rgba(14,165,233,0.12);
+            border:1px solid rgba(56,189,248,0.3);
+            color:#7dd3fc;
             font-size:1.1rem;
-            box-shadow:0 0 20px rgba(34,197,94,0.6);
-            animation: pulse 2s infinite;
+            font-weight:600;
+            box-shadow:0 0 20px rgba(14,165,233,0.25);
         }
 
-        .circulo{
+        .estado::before{
+            content:'';
+            width:12px;
+            height:12px;
+            border-radius:50%;
+            background:#22c55e;
+            box-shadow:0 0 12px #22c55e;
+            animation:pulse 1.5s infinite;
+        }
+
+        .blur{
             position:absolute;
             border-radius:50%;
-            background:rgba(255,255,255,0.08);
-            animation: flotar 10s linear infinite;
+            filter:blur(90px);
+            opacity:0.4;
         }
 
-        .c1{
+        .b1{
             width:250px;
             height:250px;
+            background:#0ea5e9;
             top:-50px;
             left:-50px;
         }
 
-        .c2{
-            width:180px;
-            height:180px;
-            bottom:-40px;
-            right:-40px;
-            animation-duration:14s;
+        .b2{
+            width:300px;
+            height:300px;
+            background:#2563eb;
+            bottom:-100px;
+            right:-80px;
         }
 
         @keyframes pulse{
-            0%{ transform:scale(1); }
-            50%{ transform:scale(1.05); }
-            100%{ transform:scale(1); }
+            0%{ transform:scale(1);}
+            50%{ transform:scale(1.3);}
+            100%{ transform:scale(1);}
         }
 
-        @keyframes aparecer{
+        @keyframes entrada{
             from{
                 opacity:0;
-                transform:translateY(30px);
+                transform:translateY(40px) scale(0.95);
             }
             to{
                 opacity:1;
-                transform:translateY(0);
+                transform:translateY(0) scale(1);
             }
         }
 
-        @keyframes flotar{
-            0%{
-                transform:translateY(0px) rotate(0deg);
+        @keyframes mover{
+            from{
+                transform:translateY(0);
             }
-            50%{
-                transform:translateY(-20px) rotate(180deg);
-            }
-            100%{
-                transform:translateY(0px) rotate(360deg);
+            to{
+                transform:translateY(40px);
             }
         }
     </style>
 </head>
 <body>
 
-    <div class="circulo c1"></div>
-    <div class="circulo c2"></div>
+    <div class="grid"></div>
+
+    <div class="blur b1"></div>
+    <div class="blur b2"></div>
 
     <div class="card">
-        <h1>🚀 Hosting Conectado</h1>
+
+        <div class="logo">
+            OTR
+        </div>
+
+        <h1>Hosting Online</h1>
 
         <p>
-            Si estás viendo esta página, tu dominio y hosting funcionan correctamente.
+            El dominio y el hosting están funcionando correctamente.
+            El proyecto está desplegado exitosamente en Vercel.
         </p>
 
         <div class="estado">
-            ✅ Sitio Online
+            Sistema Operativo
         </div>
+
     </div>
 
 </body>
