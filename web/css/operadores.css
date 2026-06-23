@@ -1,0 +1,129 @@
+/* operadores.css */
+
+.operadores-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-lg);
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+}
+
+.modal-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-md);
+  width: 100%;
+}
+
+@media (max-width: 576px) {
+  .modal-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.full-width-field {
+  grid-column: span 2;
+}
+
+@media (max-width: 576px) {
+  .full-width-field {
+    grid-column: span 1;
+  }
+}
+
+.modal-header-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  width: 100%;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: var(--spacing-sm);
+  margin-bottom: var(--spacing-xs);
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
+  width: 100%;
+  margin-top: var(--spacing-md);
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--spacing-md);
+}
+
+.btn-toggle-status {
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: var(--radius-button);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-toggle-status.btn-active {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--color-danger);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.btn-toggle-status.btn-active:hover {
+  background-color: var(--color-danger);
+  color: white;
+}
+
+.btn-toggle-status.btn-inactive {
+  background-color: rgba(46, 204, 113, 0.1);
+  color: var(--color-success);
+  border: 1px solid rgba(46, 204, 113, 0.2);
+}
+
+.btn-toggle-status.btn-inactive:hover {
+  background-color: var(--color-success);
+  color: white;
+}
+
+.badge-activo {
+  background-color: rgba(46, 204, 113, 0.15);
+  color: var(--color-success);
+  border: 1px solid rgba(46, 204, 113, 0.3);
+}
+
+.badge-inactivo {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: var(--color-danger);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.form-error {
+  color: var(--color-danger);
+  font-size: 13px;
+  margin-top: var(--spacing-xs);
+  display: none;
+}
+
+.acciones-flex {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-sm);
+}
+
+.acciones-flex .btn {
+  padding: 6px 10px;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: var(--radius-button);
+}
+
+.badge-alertas-activas {
+  background-color: rgba(74, 144, 217, 0.15);
+  color: var(--color-info);
+  border: 1px solid rgba(74, 144, 217, 0.3);
+  font-weight: 700;
+  border-radius: var(--radius-badge);
+  padding: 2px 6px;
+  font-size: 13px;
+}

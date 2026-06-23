@@ -1,0 +1,251 @@
+/*
+ * TrashFlow — Sistema de Monitoreo de Residuos Urbano
+ * 
+ * Archivo: sidebar.css
+ * Descripción: Define los estilos para el menú de navegación lateral (sidebar).
+ *              Administra su comportamiento responsivo (colapso a iconos en tablets)
+ *              e incluye estilos para enlaces de navegación y badges de alertas.
+ */
+
+/* ==========================================================================
+   Contenedor Principal del Sidebar
+   ========================================================================== */
+.sidebar {
+  width: 240px;
+  background-color: var(--color-sidebar);
+  border-right: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  transition: width var(--transition-normal);
+  flex-shrink: 0;
+  z-index: 100;
+}
+
+/* Cabecera del sidebar (Contenedor del Logo) */
+.sidebar-header {
+  height: 70px;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--spacing-md);
+  border-bottom: 1px solid var(--color-border);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.logo-link {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  height: auto;
+}
+
+.logo-svg {
+  height: 32px;
+  width: 32px;
+  flex-shrink: 0;
+}
+
+.sidebar-logo-full {
+  width: 145px;
+  height: auto;
+  display: block;
+}
+
+.sidebar-logo-icon {
+  display: none;
+  width: 32px;
+  height: auto;
+}
+
+.logo-text {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  display: inline-flex;
+  transition: opacity var(--transition-normal);
+}
+
+.logo-text .trash {
+  color: #2D3250; /* Exact color from spec: Trash */
+}
+
+.logo-text .flow {
+  color: #6B8F8A; /* Exact color from spec: Flow */
+}
+
+/* Sidebar navigation */
+.sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--spacing-md) 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.sidebar-nav-link {
+  display: flex;
+  align-items: center;
+  padding: 12px var(--spacing-md);
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  font-size: 14px;
+  gap: 12px;
+  transition: all var(--transition-fast);
+  border-left: 3px solid transparent;
+  position: relative;
+  white-space: nowrap;
+}
+
+.sidebar-nav-link svg {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  transition: stroke var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.sidebar-nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.03);
+  color: var(--color-text-primary);
+}
+
+.sidebar-nav-link.active {
+  background-color: var(--color-card);
+  color: var(--color-text-primary);
+  border-left-color: var(--color-accent-teal);
+}
+
+.sidebar-nav-link .nav-text {
+  transition: opacity var(--transition-normal);
+}
+
+/* Badge count inside sidebar link */
+.sidebar-badge {
+  background-color: var(--color-danger);
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 10px;
+  margin-left: auto;
+  transition: transform var(--transition-normal);
+}
+
+/* Sidebar footer */
+.sidebar-footer {
+  padding: var(--spacing-md);
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+
+
+/* Logout link */
+.logout-btn {
+  display: flex;
+  align-items: center;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 12px;
+  gap: 12px;
+  border-radius: var(--radius-button);
+  transition: all var(--transition-fast);
+}
+
+.logout-btn:hover {
+  color: var(--color-danger);
+  background-color: rgba(239, 68, 68, 0.05);
+}
+
+.logout-btn svg {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+}
+
+.logout-btn span {
+  transition: opacity var(--transition-normal);
+}
+
+/* Collapsible responsive sidebar for tablets (viewport < 768px) */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 70px;
+  }
+
+  .sidebar-header {
+    justify-content: center;
+    padding: 0;
+  }
+
+  .logo-link {
+    gap: 0;
+  }
+
+  .logo-text {
+    display: none;
+    opacity: 0;
+    width: 0;
+  }
+
+  .sidebar-logo-full {
+    display: none;
+  }
+
+  .sidebar-logo-icon {
+    display: block;
+  }
+
+  .sidebar-nav-link {
+    justify-content: center;
+    padding: 12px 0;
+    border-left-width: 4px;
+  }
+
+  .sidebar-nav-link .nav-text {
+    display: none;
+    opacity: 0;
+  }
+
+  /* Badge in collapsed mode becomes a dot in the corner */
+  .sidebar-badge {
+    position: absolute;
+    top: 6px;
+    right: 18px;
+    margin-left: 0;
+    padding: 4px;
+    width: 8px;
+    height: 8px;
+    font-size: 0;
+    border-radius: 50%;
+  }
+
+  .sidebar-footer {
+    padding: var(--spacing-sm) 0;
+    align-items: center;
+  }
+
+
+
+  .logout-btn {
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+  }
+
+  .logout-btn span {
+    display: none;
+    opacity: 0;
+  }
+}

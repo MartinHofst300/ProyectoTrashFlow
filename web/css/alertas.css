@@ -1,0 +1,215 @@
+/* Filter Section Styles */
+.filter-card {
+  margin-bottom: var(--spacing-lg);
+  padding: var(--spacing-md) var(--spacing-lg);
+}
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: 2fr 1.2fr 1.2fr 1.2fr auto;
+  gap: var(--spacing-md);
+  align-items: end;
+}
+
+.select-hidden-label {
+  display: block;
+}
+
+.date-input {
+  /* Fix native date picker dark color styling for edge cases */
+  color-scheme: dark;
+}
+
+.filter-submit-btn {
+  height: 40px;
+  background-color: var(--color-accent-teal);
+  color: var(--color-bg);
+  font-weight: 700;
+  padding: 0 20px;
+}
+
+/* Operator Cell Presentation */
+.operator-cell {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.operator-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: var(--color-accent-blue);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.operator-name {
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.operator-unassigned {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+/* IA Confidence Indicators */
+.confidence-wrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  min-width: 130px;
+}
+
+.progress-bar-container {
+  flex: 1;
+  height: 6px;
+  background-color: var(--color-border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  border-radius: 3px;
+  transition: width var(--transition-normal);
+}
+
+.confidence-text {
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 32px;
+  text-align: right;
+}
+
+/* Confidence Color rules */
+.confidence-high { background-color: var(--color-success); }
+.confidence-high-text { color: var(--color-success); }
+
+.confidence-medium { background-color: var(--color-warning); }
+.confidence-medium-text { color: var(--color-warning); }
+
+.confidence-low { background-color: var(--color-danger); }
+.confidence-low-text { color: var(--color-danger); }
+
+/* Pagination Toolbar */
+.pagination-container {
+  display: flex;
+  align-items: center;
+  justify-content: justify-between;
+  margin-top: var(--spacing-lg);
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--color-border);
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+}
+
+.pagination-summary {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.pagination-buttons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.pagination-number-btn {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-button);
+  background: transparent;
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.pagination-number-btn:hover {
+  border-color: var(--color-text-secondary);
+  color: var(--color-text-primary);
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.pagination-number-btn.active {
+  background-color: var(--color-accent-teal);
+  color: var(--color-bg);
+  border-color: var(--color-accent-teal);
+  box-shadow: 0 0 8px rgba(107, 143, 138, 0.25);
+}
+
+.pagination-btn {
+  padding: 8px 12px;
+  font-size: 13px;
+  height: 34px;
+}
+
+.pagination-btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Dropdown selections styling inside cards */
+.form-select option {
+  background-color: #ffffff;
+  color: #000000;
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 1024px) {
+  .filter-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .search-group {
+    grid-column: span 2;
+  }
+  
+  .submit-group {
+    grid-column: span 2;
+  }
+  
+  .filter-submit-btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .pagination-container {
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-sm);
+  }
+  
+  .pagination-buttons {
+    margin-left: 0;
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .filter-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .search-group, .submit-group {
+    grid-column: span 1;
+  }
+}

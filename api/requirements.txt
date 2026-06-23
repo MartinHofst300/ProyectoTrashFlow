@@ -1,0 +1,7 @@
+Flask
+Flask-CORS
+Flask-JWT-Extended
+PyMySQL
+bcrypt
+python-dotenv
+requests

@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alertas de Residuos — TrashFlow</title>
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Historial completo y filtros de alertas de residuos por IA en la Municipalidad de Vicente López.">
+  
+  <!-- CSS Imports -->
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/sidebar.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="icon" type="image/png" href="../assets/isotipo.png">
+  <link rel="stylesheet" href="../css/alertas.css">
+</head>
+<body>
+  <div class="app-container">
+    
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <a href="dashboard.html" class="logo-link">
+          <img src="../assets/isologo.png" class="sidebar-logo-full" alt="TrashFlow Logo">
+          <img src="../assets/isotipo.png" class="sidebar-logo-icon" alt="TrashFlow Icon">
+        </a>
+      </div>
+      
+      <nav class="sidebar-content">
+        <a href="dashboard.html" class="sidebar-nav-link">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="9"></rect>
+            <rect x="14" y="3" width="7" height="5"></rect>
+            <rect x="14" y="12" width="7" height="9"></rect>
+            <rect x="3" y="16" width="7" height="5"></rect>
+          </svg>
+          <span class="nav-text">Panel Principal</span>
+        </a>
+        <a href="alertas.html" class="sidebar-nav-link active">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <span class="nav-text">Alertas</span>
+        </a>
+        <a href="mapa.html" class="sidebar-nav-link">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+            <line x1="8" y1="2" x2="8" y2="18"></line>
+            <line x1="16" y1="6" x2="16" y2="22"></line>
+          </svg>
+          <span class="nav-text">Mapa Interactivo</span>
+        </a>
+        <a href="camaras.html" class="sidebar-nav-link">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+            <circle cx="12" cy="13" r="4"></circle>
+          </svg>
+          <span class="nav-text">Cámaras</span>
+        </a>
+        <a href="operadores.html" class="sidebar-nav-link">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+          <span class="nav-text">Operadores</span>
+        </a>
+        <a href="#" class="sidebar-nav-link">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="20" x2="18" y2="10"></line>
+            <line x1="12" y1="20" x2="12" y2="4"></line>
+            <line x1="6" y1="20" x2="6" y2="14"></line>
+          </svg>
+          <span class="nav-text">Reportes</span>
+        </a>
+        <a href="#" class="sidebar-nav-link">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          <span class="nav-text">Historial</span>
+        </a>
+        <a href="#" class="sidebar-nav-link">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+          <span class="nav-text">Configuración</span>
+        </a>
+      </nav>
+      
+      <div class="sidebar-footer">
+        <a href="#" class="logout-btn" id="logout-btn" title="Cerrar Sesión">
+          <svg viewBox="0 0 24 24">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+          <span>Cerrar Sesión</span>
+        </a>
+      </div>
+    </aside>
+    
+    <!-- Main Content Container -->
+    <main class="main-content">
+      
+      <!-- Topbar Header -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <h1 class="topbar-title">Alertas de Residuos</h1>
+          <div class="topbar-subtitle">
+            <span>📍 Municipalidad de Vicente López</span>
+          </div>
+        </div>
+        
+        <div class="topbar-right">
+          <!-- Notification Bell -->
+          <div class="notification-bell" title="Alertas pendientes">
+            <svg viewBox="0 0 24 24">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
+          </div>
+          
+          <!-- Profile Initials Icon -->
+          <div class="user-profile">
+            <div class="user-avatar" title="Cargando...">--</div>
+          </div>
+        </div>
+      </header>
+      
+      <!-- Scroll Content Body -->
+      <div class="content-body">
+        
+        <!-- Filter Panel Section -->
+        <section class="card filter-card">
+          <form id="filters-form" class="filter-grid">
+            
+            <!-- Search Text -->
+            <div class="form-group search-group">
+              <label for="search-input" class="form-label">Buscar Alerta</label>
+              <div class="input-container">
+                <input 
+                  type="text" 
+                  id="search-input" 
+                  class="form-input" 
+                  placeholder="ID (ej: TF-1024) o dirección..."
+                >
+              </div>
+            </div>
+            
+            <!-- Filter Zona -->
+            <div class="form-group">
+              <label for="filter-zona" class="form-label">Zona</label>
+              <select id="filter-zona" class="form-select">
+                <option value="Todas las Zonas">Todas las Zonas</option>
+                <option value="Centro">Centro</option>
+                <option value="Olivos">Olivos</option>
+                <option value="La Lucila">La Lucila</option>
+                <option value="Munro">Munro</option>
+                <option value="Villa Martelli">Villa Martelli</option>
+                <option value="Florida">Florida</option>
+                <option value="Carapachay">Carapachay</option>
+              </select>
+            </div>
+            
+            <!-- Filter Estado -->
+            <div class="form-group">
+              <label for="filter-estado" class="form-label">Estado</label>
+              <select id="filter-estado" class="form-select">
+                <option value="Todos los Estados">Todos los Estados</option>
+                <option value="Pendiente">Pendiente</option>
+                <option value="Asignada">Asignada</option>
+                <option value="En Proceso">En Proceso</option>
+                <option value="Resuelta">Resuelta</option>
+                <option value="Descartada">Descartada</option>
+              </select>
+            </div>
+            
+            <!-- Datepicker Picker -->
+            <div class="form-group">
+              <label for="filter-fecha" class="form-label">Fecha</label>
+              <input type="date" id="filter-fecha" class="form-input date-input">
+            </div>
+            
+            <!-- Submit Button -->
+            <div class="form-group submit-group">
+              <label class="form-label select-hidden-label">&nbsp;</label>
+              <button type="submit" class="btn btn-primary filter-submit-btn">
+                Aplicar Filtros
+              </button>
+            </div>
+            
+          </form>
+        </section>
+        
+        <!-- Table Alert Log Section -->
+        <section class="card table-card">
+          <div class="table-responsive">
+            <table class="table" id="alerts-table">
+              <thead>
+                <tr>
+                  <th>Foto</th>
+                  <th>Zona / Ubicación</th>
+                  <th>Tipo</th>
+                  <th>Estado</th>
+                  <th>Fecha / Hora</th>
+                  <th>Operador</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Loader skeletons by default -->
+                <tr class="skeleton-row"></tr>
+                <tr class="skeleton-row"></tr>
+                <tr class="skeleton-row"></tr>
+                <tr class="skeleton-row"></tr>
+                <tr class="skeleton-row"></tr>
+              </tbody>
+            </table>
+          </div>
+          
+          <!-- Pagination Toolbar -->
+          <div class="pagination-container">
+            <div class="pagination-summary" id="pagination-info">
+              Cargando alertas...
+            </div>
+            <div class="pagination-buttons" id="pagination-controls">
+              <!-- Dynamically populated page buttons -->
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <!-- Zoom Photo Modal overlay -->
+  <div id="photo-modal" class="modal-overlay">
+    <div class="modal-container">
+      <button class="modal-close-btn" id="modal-photo-close" aria-label="Cerrar modal">
+        <svg viewBox="0 0 24 24">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+      <div class="modal-body">
+        <img src="" id="modal-photo-img" class="modal-img" alt="Evidencia ampliada">
+        <div class="modal-title-bar">
+          <span id="modal-photo-title" style="font-weight: 600; color: var(--color-text-primary);">Evidencia de Alerta</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Asignar Operador Modal overlay -->
+  <div id="asignar-operador-modal" class="modal-overlay">
+    <div class="modal-container" style="max-width: 400px; width: 90%;">
+      <button class="modal-close-btn" id="modal-asignar-close" aria-label="Cerrar modal">
+        <svg viewBox="0 0 24 24">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+      <div class="modal-body" style="padding: 25px;">
+        <h3 style="margin-top: 0; color: var(--color-text-primary); font-size: 1.2rem; font-weight: bold; margin-bottom: 10px;">Asignar Operador</h3>
+        <p style="color: var(--color-text-secondary); font-size: 0.9rem; margin-bottom: 20px;">Selecciona el operador de campo que resolverá esta alerta.</p>
+        
+        <input type="hidden" id="asignar-alerta-id">
+        
+        <div style="margin-bottom: 20px;">
+          <label for="select-operador" style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--color-text-primary); font-size: 0.9rem;">Operador Activo</label>
+          <select id="select-operador" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--color-border); background-color: var(--color-surface); color: var(--color-text-primary); outline: none;">
+            <option value="">Cargando operadores...</option>
+          </select>
+        </div>
+        
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 25px;">
+          <button type="button" class="btn btn-secondary" id="btn-cancelar-asignar" style="padding: 8px 16px;">Cancelar</button>
+          <button type="button" class="btn btn-primary" id="btn-confirmar-asignar" style="padding: 8px 16px; background-color: var(--color-primary); color: #fff; border: none; border-radius: 4px;">Confirmar asignación</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Script Core Imports -->
+  <script src="../js/config.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/alertas.js"></script>
+</body>
+</html>

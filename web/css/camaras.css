@@ -1,0 +1,147 @@
+/*
+ * TrashFlow — Sistema de Monitoreo de Residuos Urbano
+ * 
+ * Archivo: camaras.css
+ * Descripción: Estilos para la presentación del listado de dispositivos y cámaras fijas
+ *              en el panel municipal (camaras.html). Organiza la grilla de dispositivos
+ *              y el diseño de las tarjetas de estado de conectividad.
+ */
+
+/* ==========================================================================
+   Contenedores Principales
+   ========================================================================== */
+
+/* Grilla de cámaras en disposición responsiva */
+.camaras-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--spacing-lg);
+  margin-top: var(--spacing-md);
+}
+
+/* Tarjeta individual de cámara */
+.camera-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Cabecera de la tarjeta con título e indicador de estado */
+.camera-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--spacing-md);
+  gap: var(--spacing-sm);
+}
+
+.camera-title-group {
+  flex-grow: 1;
+}
+
+/* Título del dispositivo */
+.camera-card-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0 0 6px 0;
+}
+
+/* Ubicación y coordenadas de instalación */
+.camera-card-location {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ==========================================================================
+   Estadísticas e Indicadores (Badges)
+   ========================================================================== */
+
+/* Métricas del dispositivo (detecciones totales y última conexión) */
+.camera-stats {
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  padding: var(--spacing-md) 0;
+  margin-bottom: var(--spacing-md);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-md);
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stat-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  letter-spacing: 0.5px;
+}
+
+.stat-value {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+/* Badge de estado: En línea (Activo) */
+.badge-online {
+  background-color: rgba(46, 204, 113, 0.15);
+  color: var(--color-success);
+  border: 1px solid rgba(46, 204, 113, 0.3);
+}
+
+/* Badge de estado: Desconectado */
+.badge-offline {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: var(--color-danger);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+/* Badge de estado: Mantenimiento */
+.badge-mantenimiento {
+  background-color: rgba(245, 166, 35, 0.15);
+  color: var(--color-warning);
+  border: 1px solid rgba(245, 166, 35, 0.3);
+}
+
+.camera-card-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: auto;
+}
+
+/* ==========================================================================
+   Estados Vacíos o Fallas
+   ========================================================================== */
+
+/* Contenedor para estados vacíos (sin cámaras registradas) */
+.empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: var(--spacing-xl) var(--spacing-lg);
+  color: var(--color-text-secondary);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-card);
+  background-color: var(--color-card);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.empty-state svg {
+  width: 48px;
+  height: 48px;
+  stroke: var(--color-text-secondary);
+  stroke-width: 1.5;
+  fill: none;
+}
+
+

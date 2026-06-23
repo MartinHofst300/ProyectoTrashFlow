@@ -1,0 +1,126 @@
+/* KPI Section Grid */
+.kpis-grid {
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+}
+
+.kpi-card {
+  min-height: 110px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle left boundary indicator for cards */
+.kpi-card::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+}
+
+.kpis-grid .kpi-card:nth-child(1)::after { background-color: var(--color-danger); }   /* Alertas Hoy (Trash alerts) */
+.kpis-grid .kpi-card:nth-child(2)::after { background-color: var(--color-warning); }  /* Pendientes */
+.kpis-grid .kpi-card:nth-child(3)::after { background-color: var(--color-success); }  /* Resueltas */
+.kpis-grid .kpi-card:nth-child(4)::after { background-color: var(--color-info); }     /* Tiempo Promedio */
+
+.kpi-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1;
+  margin: 6px 0;
+}
+
+/* Charts Grid Layout */
+.charts-grid {
+  grid-template-columns: 1.5fr 1fr;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+}
+
+.chart-card-wrapper {
+  position: relative;
+  height: 250px;
+  width: 100%;
+}
+
+/* Table Card Details link */
+.history-link {
+  font-size: 13px;
+  color: var(--color-accent-teal);
+  font-weight: 500;
+  transition: color var(--transition-fast);
+}
+
+.history-link:hover {
+  color: var(--color-text-primary);
+}
+
+/* Table elements inside dashboard */
+.table-thumbnail {
+  width: 60px;
+  height: 45px;
+  object-fit: cover;
+  border-radius: var(--radius-badge);
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+  display: block;
+  transition: all var(--transition-fast);
+}
+
+.table-thumbnail:hover {
+  transform: scale(1.06);
+  border-color: var(--color-accent-teal);
+  box-shadow: 0 0 8px rgba(107, 143, 138, 0.2);
+}
+
+.action-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-badge);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  transition: all var(--transition-fast);
+}
+
+.action-icon-btn:hover {
+  color: var(--color-accent-teal);
+  border-color: var(--color-accent-teal);
+  background-color: rgba(107, 143, 138, 0.05);
+}
+
+/* Responsive Overrides */
+@media (max-width: 1024px) {
+  .kpis-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 580px) {
+  .kpis-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
+  }
+  
+  .history-link {
+    align-self: flex-end;
+  }
+}

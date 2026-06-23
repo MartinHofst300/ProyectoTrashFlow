@@ -1,0 +1,166 @@
+/**
+ * TrashFlow — Sistema de Monitoreo de Residuos Urbano
+ * 
+ * Archivo: base.css
+ * Descripción: Define las reglas globales de estilo, la tipografía base, reset general,
+ *              diseño estético de barras de desplazamiento (scrollbars), clases de utilidad
+ *              globales y el layout contenedor de la interfaz de la aplicación.
+ * 
+ * Dependencias:
+ *   - variables.css (Usa variables del sistema de diseño)
+ * 
+ * Expone:
+ *   - Clases de alineación flex y colores de texto comunes.
+ *   - Estilos generales para HTML, BODY, A, BUTTON, INPUT y scrollbars.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* Reset and box-sizing */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  font-family: var(--font-primary);
+  background-color: var(--color-bg);
+  color: var(--color-text-primary);
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+button {
+  font-family: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+  outline: none;
+}
+
+input, select, textarea {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  outline: none;
+}
+
+/* Scrollbar styling for high-end professional appearance */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-secondary);
+}
+
+/* Typography elements */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+p {
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+/* Global utility classes */
+.flex {
+  display: flex;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.flex-1 {
+  flex: 1;
+}
+
+.grid {
+  display: grid;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.h-full {
+  height: 100%;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* Text status colors */
+.text-success { color: var(--color-success); }
+.text-warning { color: var(--color-warning); }
+.text-info { color: var(--color-info); }
+.text-danger { color: var(--color-danger); }
+
+/* Background status colors */
+.bg-success-subtle { background-color: rgba(46, 204, 113, 0.15); color: var(--color-success); }
+.bg-warning-subtle { background-color: rgba(245, 166, 35, 0.15); color: var(--color-warning); }
+.bg-info-subtle { background-color: rgba(74, 144, 217, 0.15); color: var(--color-info); }
+.bg-danger-subtle { background-color: rgba(239, 68, 68, 0.15); color: var(--color-danger); }
+.bg-secondary-subtle { background-color: rgba(136, 136, 136, 0.15); color: var(--color-text-secondary); }
+
+/* Main app container layout (for pages with sidebars) */
+.app-container {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--color-bg);
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.content-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--spacing-lg);
+}
