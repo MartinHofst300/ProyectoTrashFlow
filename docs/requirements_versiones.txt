@@ -1,0 +1,14 @@
+# Este archivo se genera automáticamente corriendo el siguiente comando
+# con el entorno basuraia activo DESPUÉS de instalar todas las dependencias:
+#
+#   conda activate basuraia
+#   pip freeze > api/requirements_versiones.txt
+#
+# Guardalo como respaldo. Si en el futuro algo rompe por versiones incompatibles,
+# usá este archivo para restaurar el entorno exacto:
+#
+#   pip install -r api/requirements_versiones.txt
+#
+# IMPORTANTE: no reemplaces requirements.txt con este archivo.
+# requirements.txt es para instalación limpia.
+# requirements_versiones.txt es para restaurar un entorno que funcionaba.

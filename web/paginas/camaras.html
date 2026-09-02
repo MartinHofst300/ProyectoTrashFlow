@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cámaras Fijas — TrashFlow</title>
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Gestión y monitoreo de las cámaras fijas de detección de residuos del sistema TrashFlow.">
+  
+  <!-- CSS Imports -->
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/sidebar.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="icon" type="image/png" href="../assets/isotipo.png">
+  <link rel="stylesheet" href="../css/camaras.css">
+  <!-- Leaflet for mini map preview in the camera form -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+</head>
+<body>
+  <div class="app-container">
+    
+    <!-- Sidebar Navigation (dynamically rendered by JS) -->
+    <aside class="sidebar"></aside>
+    
+    <!-- Main Content Container -->
+    <main class="main-content">
+      
+      <!-- Topbar Header -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <h1 class="topbar-title">Dispositivos y Cámaras</h1>
+          <div class="topbar-subtitle">
+            <span>📍 Monitoreo de Visión Artificial — Vicente López</span>
+          </div>
+        </div>
+        
+        <div class="topbar-right">
+          <!-- Notification Bell -->
+          <div class="notification-bell" title="Alertas pendientes">
+            <svg viewBox="0 0 24 24">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
+          </div>
+          
+          <!-- Profile Initials Icon -->
+          <div class="user-profile">
+            <div class="user-avatar" title="Cargando...">--</div>
+          </div>
+        </div>
+      </header>
+      
+      <!-- Scroll Content Body -->
+      <div class="content-body">
+
+        <!-- Header panel with button -->
+        <div class="operadores-header" style="margin-bottom: var(--spacing-lg);">
+          <div>
+          <h2 class="card-title" style="font-size: 20px;">Cámaras registradas</h2>
+          <p class="card-subtitle">Administrá y monitoreá los dispositivos de visión artificial instalados en la vía pública.</p>
+          </div>
+          <button id="btn-nueva-camara" class="btn btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            <span class="btn-text">Nueva Cámara</span>
+          </button>
+        </div>
+        
+        <!-- Cameras Grid Container -->
+        <section class="camaras-grid" id="camaras-container">
+          <!-- Skeletons loader displayed by default -->
+          <div class="card camera-card skeleton-card">
+            <div class="camera-card-header">
+              <div class="camera-title-group">
+                <div class="skeleton skeleton-title" style="width: 65%; height: 20px;"></div>
+                <div class="skeleton skeleton-text" style="width: 45%; height: 12px; margin-top: 8px;"></div>
+              </div>
+              <div class="skeleton skeleton-badge" style="width: 70px; height: 22px;"></div>
+            </div>
+            <div class="camera-stats">
+              <div class="stat-item">
+                <div class="skeleton skeleton-text" style="width: 40%; height: 10px;"></div>
+                <div class="skeleton skeleton-text" style="width: 70%; height: 16px; margin-top: 4px;"></div>
+              </div>
+              <div class="stat-item">
+                <div class="skeleton skeleton-text" style="width: 50%; height: 10px;"></div>
+                <div class="skeleton skeleton-text" style="width: 80%; height: 16px; margin-top: 4px;"></div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card camera-card skeleton-card">
+            <div class="camera-card-header">
+              <div class="camera-title-group">
+                <div class="skeleton skeleton-title" style="width: 50%; height: 20px;"></div>
+                <div class="skeleton skeleton-text" style="width: 55%; height: 12px; margin-top: 8px;"></div>
+              </div>
+              <div class="skeleton skeleton-badge" style="width: 70px; height: 22px;"></div>
+            </div>
+            <div class="camera-stats">
+              <div class="stat-item">
+                <div class="skeleton skeleton-text" style="width: 40%; height: 10px;"></div>
+                <div class="skeleton skeleton-text" style="width: 50%; height: 16px; margin-top: 4px;"></div>
+              </div>
+              <div class="stat-item">
+                <div class="skeleton skeleton-text" style="width: 50%; height: 10px;"></div>
+                <div class="skeleton skeleton-text" style="width: 60%; height: 16px; margin-top: 4px;"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+        
+      </div>
+    </main>
+  </div>
+
+  <!-- ============================
+       MODAL: CREAR NUEVA CÁMARA
+  ============================= -->
+  <div id="camara-modal" class="modal-overlay">
+    <div class="modal-container camara-modal-container">
+      <button class="modal-close-btn" id="camara-modal-close" aria-label="Cerrar modal">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+      <div class="modal-body camara-modal-body">
+        <h3 class="modal-header-title">Registrar Nueva Cámara</h3>
+
+        <form id="camara-form" class="camara-form-layout">
+
+          <!-- Nombre (ancho completo) -->
+          <div class="form-group">
+            <label for="cam-nombre" class="form-label">Nombre *</label>
+            <input type="text" id="cam-nombre" class="form-input"
+                   placeholder="Ej: Cámara Av. Maipú #2" required autocomplete="off">
+          </div>
+
+          <!-- Zona: oculta, se asigna automáticamente al geocodificar -->
+          <select id="cam-zona" style="display:none" aria-hidden="true">
+            <option value="">Sin zona asignada</option>
+            <option value="1">Centro</option>
+            <option value="2">Olivos</option>
+            <option value="3">La Lucila</option>
+            <option value="4">Munro</option>
+            <option value="5">Villa Martelli</option>
+            <option value="6">Florida</option>
+            <option value="7">Carapachay</option>
+          </select>
+
+          <!-- ── Dirección con botón geocodificar ── -->
+          <div class="form-group">
+            <label for="cam-ubicacion" class="form-label">Dirección / Ubicación *</label>
+            <div class="geocode-row">
+              <input type="text" id="cam-ubicacion" class="form-input"
+                     placeholder="Ej: Av. Maipú 2300, Olivos, Buenos Aires"
+                     required autocomplete="off">
+              <button type="button" id="btn-geocodificar" class="btn btn-secondary geocode-btn" title="Obtener coordenadas automáticamente">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                Localizar
+              </button>
+            </div>
+            <span class="geocode-hint">Escribí la dirección completa y presioná <strong>Localizar</strong> — las coordenadas y la zona se asignan automáticamente.</span>
+          </div>
+
+          <!-- ── Mini mapa de confirmación (oculto hasta geocodificar) ── -->
+          <div id="cam-mapa-preview" class="cam-mapa-preview hidden">
+            <div class="cam-mapa-header">
+              <span class="cam-mapa-label">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 14 8 14s8-8.75 8-14a8 8 0 0 0-8-8z"/></svg>
+                Ubicación detectada — podés arrastrar el pin para ajustar
+              </span>
+              <span style="display:flex;gap:8px;align-items:center;">
+                <span id="cam-zona-badge" class="cam-coords-display" style="font-family:inherit;font-size:11px;"></span>
+                <span id="cam-coords-display" class="cam-coords-display"></span>
+              </span>
+            </div>
+            <div id="cam-mapa" class="cam-mapa"></div>
+            <!-- Campos ocultos que guardan lat/lng para el submit -->
+            <input type="hidden" id="cam-lat" required>
+            <input type="hidden" id="cam-lng" required>
+          </div>
+
+          <!-- ── Descripción (opcional) ── -->
+          <div class="form-group">
+            <label for="cam-descripcion" class="form-label">Descripción <span class="form-label-optional">(opcional)</span></label>
+            <input type="text" id="cam-descripcion" class="form-input"
+                   placeholder="Ej: Cámara apuntando hacia el contenedor de la esquina" autocomplete="off">
+          </div>
+
+          <div class="full-width-field form-error" id="camara-form-error"></div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="camara-btn-cancelar">Cancelar</button>
+            <button type="submit" class="btn btn-primary" id="camara-btn-guardar">Crear Cámara</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================
+       MODAL: TOKEN GENERADO
+  ============================= -->
+  <div id="token-modal" class="modal-overlay">
+    <div class="modal-container" style="max-width: 520px;">
+      <div class="modal-body" style="align-items: flex-start; padding: var(--spacing-lg);">
+        <div style="font-size: 2.5rem; margin-bottom: 12px;">✅</div>
+        <h3 class="modal-header-title" style="color: var(--color-success);">¡Cámara registrada!</h3>
+        <p class="card-subtitle" style="margin-bottom: var(--spacing-md);">
+          La cámara fue dada de alta correctamente. El token de acceso a continuación debe ser entregado al técnico responsable de la instalación.
+          <br><strong>Guardalo ahora — no se vuelve a mostrar.</strong>
+        </p>
+
+        <div style="background: var(--color-bg-secondary); border: 1px solid var(--color-border); border-radius: var(--border-radius); padding: 14px 16px; margin-bottom: 20px; width: 100%; word-break: break-all;">
+          <div style="font-size: 0.72rem; color: var(--color-text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.08em;">Token de instalación</div>
+          <div id="token-display" style="font-family: monospace; font-size: 0.88rem; color: var(--color-text-primary); line-height: 1.6;"></div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-secondary" id="token-btn-copiar">
+            📋 Copiar Token
+          </button>
+          <button class="btn btn-primary" id="token-btn-cerrar">Listo</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================
+       MODAL: EDITAR CÁMARA
+  ============================= -->
+  <div id="editar-camara-modal" class="modal-overlay">
+    <div class="modal-container camara-modal-container">
+      <button class="modal-close-btn" id="editar-camara-close" aria-label="Cerrar modal">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+      <div class="modal-body camara-modal-body">
+        <h3 class="modal-header-title">Editar Cámara</h3>
+        <p class="card-subtitle" style="margin-bottom: var(--spacing-md);">Modificá los campos que necesites actualizar.</p>
+
+        <form id="editar-camara-form" class="camara-form-layout">
+          <input type="hidden" id="edit-cam-id">
+          <input type="hidden" id="edit-cam-lat">
+          <input type="hidden" id="edit-cam-lng">
+
+          <!-- ── Nombre (ancho completo) ── -->
+          <div class="form-group">
+            <label for="edit-cam-nombre" class="form-label">Nombre *</label>
+            <input type="text" id="edit-cam-nombre" class="form-input" required autocomplete="off">
+          </div>
+
+          <!-- ── Dirección con botón geocodificar ── -->
+          <div class="form-group">
+            <label for="edit-cam-ubicacion" class="form-label">Dirección / Ubicación *</label>
+            <div class="geocode-row">
+              <input type="text" id="edit-cam-ubicacion" class="form-input"
+                     placeholder="Ej: Av. Maipú 2300, Olivos, Buenos Aires"
+                     required autocomplete="off">
+              <button type="button" id="btn-geocodificar-edit" class="btn btn-secondary geocode-btn" title="Obtener coordenadas automáticamente">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                Localizar
+              </button>
+            </div>
+            <span class="geocode-hint">Escribí la dirección completa y presioná <strong>Localizar</strong> para actualizar las coordenadas.</span>
+          </div>
+
+          <!-- ── Mini mapa de confirmación (oculto hasta geocodificar) ── -->
+          <div id="edit-cam-mapa-preview" class="cam-mapa-preview hidden">
+            <div class="cam-mapa-header">
+              <span class="cam-mapa-label">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 14 8 14s8-8.75 8-14a8 8 0 0 0-8-8z"/></svg>
+                Ubicación detectada — podés arrastrar el pin para ajustar
+              </span>
+              <span style="display:flex;gap:8px;align-items:center;">
+                <span id="edit-cam-zona-badge" class="cam-coords-display" style="font-family:inherit;font-size:11px;"></span>
+                <span id="edit-cam-coords-display" class="cam-coords-display"></span>
+              </span>
+            </div>
+            <div id="edit-cam-mapa" class="cam-mapa" style="height:160px"></div>
+          </div>
+
+          <!-- ── Descripción (opcional) ── -->
+          <div class="form-group">
+            <label for="edit-cam-descripcion" class="form-label">Descripción <span class="form-label-optional">(opcional)</span></label>
+            <input type="text" id="edit-cam-descripcion" class="form-input" autocomplete="off">
+          </div>
+
+          <div class="full-width-field form-error" id="editar-camara-error"></div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="editar-camara-cancelar">Cancelar</button>
+            <button type="submit" class="btn btn-primary" id="editar-camara-guardar">Guardar Cambios</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Script Core Imports -->
+  <script src="../js/config.js"></script>
+  <script src="../js/auth.js"></script>
+  <!-- Leaflet JS (geocodificación + mapa interactivo en formularios) -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="../js/camaras.js"></script>
+</body>
+</html>

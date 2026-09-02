@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TrashFlow — La ciudad más limpia, gestionada con inteligencia</title>
+  <meta name="description"
+    content="TrashFlow transforma la forma en que los municipios gestionan los residuos urbanos. Detección automática, alertas instantáneas y un panel centralizado para responder más rápido y con menos esfuerzo.">
+  <meta name="keywords"
+    content="TrashFlow, gestión de residuos, ciudades inteligentes, smart city, limpieza urbana, municipio, panel de gestión">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+
+  <link rel="icon" type="image/png" href="web/assets/isotipo.png">
+  <link rel="stylesheet" href="web/css/landing.css">
+</head>
+
+<body>
+
+  <div class="bg-gradient-animated" aria-hidden="true"></div>
+  <div class="grid-overlay" aria-hidden="true"></div>
+
+  <!-- ================================================================
+       NAVBAR
+  ================================================================ -->
+  <nav class="navbar" id="navbar" role="navigation" aria-label="Navegación principal">
+    <div class="container">
+      <div class="navbar-inner">
+        <a class="navbar-logo" href="#inicio" aria-label="TrashFlow inicio">
+          <img src="web/assets/isotipo.png" alt="TrashFlow">
+          <span class="navbar-logo-text">Trash<span>Flow</span></span>
+        </a>
+
+        <ul class="navbar-links">
+          <li><a href="#que-es">¿Qué es?</a></li>
+          <li><a href="#como-funciona">Cómo funciona</a></li>
+          <li><a href="#funcionalidades">Funcionalidades</a></li>
+          <li><a href="#beneficios">Beneficios</a></li>
+          <li><a href="#por-que">¿Por qué TrashFlow?</a></li>
+        </ul>
+
+        <a href="web/paginas/login.html" class="btn-primary" id="nav-btn-panel">
+          Acceder al Panel →
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ================================================================
+       HERO
+  ================================================================ -->
+  <section class="hero" id="inicio" aria-labelledby="hero-title">
+    <div class="container">
+      <div class="hero-content">
+        <div class="hero-text">
+          <div class="hero-badge">
+            <span class="hero-badge-dot" aria-hidden="true"></span>
+            Disponible ahora · Ciudades más limpias
+          </div>
+
+          <h1 class="hero-title" id="hero-title">
+            Tu ciudad más limpia,<br>
+            gestionada con
+            <span class="highlight">inteligencia</span>
+          </h1>
+
+          <p class="hero-desc">
+            TrashFlow detecta focos de residuos en el espacio público de forma automática, alerta a los operarios
+            en segundos y centraliza toda la gestión en un único panel municipal. Sin llamadas, sin demoras.
+          </p>
+
+          <div class="hero-actions">
+            <a href="web/paginas/login.html" class="btn-hero" id="hero-btn-panel">
+              <span>Ver el Panel</span>
+            </a>
+            <a href="#como-funciona" class="btn-outline" id="hero-btn-how">Cómo funciona</a>
+          </div>
+
+          <div class="hero-stats">
+            <div class="hero-stat">
+              <span class="hero-stat-value">+95%</span>
+              <span class="hero-stat-label">Precisión de detección</span>
+            </div>
+            <div class="hero-stat-divider" aria-hidden="true"></div>
+            <div class="hero-stat">
+              <span class="hero-stat-value">24/7</span>
+              <span class="hero-stat-label">Monitoreo continuo</span>
+            </div>
+            <div class="hero-stat-divider" aria-hidden="true"></div>
+            <div class="hero-stat">
+              <span class="hero-stat-value">&lt;2s</span>
+              <span class="hero-stat-label">Tiempo de alerta</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dashboard Mockup -->
+        <div class="hero-visual" aria-hidden="true">
+          <div style="position: relative;">
+            <div class="hero-mockup">
+              <div class="mockup-topbar">
+                <span class="mockup-dot mockup-dot-r"></span>
+                <span class="mockup-dot mockup-dot-y"></span>
+                <span class="mockup-dot mockup-dot-g"></span>
+                <span class="mockup-url">trashflow.municipio · Panel de gestión</span>
+              </div>
+              <div class="mockup-body">
+                <div class="mockup-header">📊 Panel Municipal — Vicente López</div>
+                <div class="mockup-kpis">
+                  <div class="mockup-kpi">
+                    <div class="mockup-kpi-label">Alertas hoy</div>
+                    <div class="mockup-kpi-value danger" id="counter-alertas">0</div>
+                  </div>
+                  <div class="mockup-kpi">
+                    <div class="mockup-kpi-label">Pendientes</div>
+                    <div class="mockup-kpi-value warning" id="counter-pendientes">0</div>
+                  </div>
+                  <div class="mockup-kpi">
+                    <div class="mockup-kpi-label">Resueltas</div>
+                    <div class="mockup-kpi-value success" id="counter-resueltas">0</div>
+                  </div>
+                  <div class="mockup-kpi">
+                    <div class="mockup-kpi-label">Resp. prom.</div>
+                    <div class="mockup-kpi-value info" id="counter-tiempo">0m</div>
+                  </div>
+                </div>
+                <div class="mockup-bar-row">
+                  <div class="mockup-bar-label"><span>Olivos</span><span>24</span></div>
+                  <div class="mockup-bar-track">
+                    <div class="mockup-bar-fill fill-teal" style="width: 82%"></div>
+                  </div>
+                  <div class="mockup-bar-label"><span>Florida</span><span>18</span></div>
+                  <div class="mockup-bar-track">
+                    <div class="mockup-bar-fill fill-blue" style="width: 65%"></div>
+                  </div>
+                  <div class="mockup-bar-label"><span>Munro</span><span>11</span></div>
+                  <div class="mockup-bar-track">
+                    <div class="mockup-bar-fill fill-amber" style="width: 40%"></div>
+                  </div>
+                  <div class="mockup-bar-label"><span>Vicente López</span><span>7</span></div>
+                  <div class="mockup-bar-track">
+                    <div class="mockup-bar-fill fill-primary" style="width: 28%"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="hero-notif">
+              <div class="notif-icon">🗑️</div>
+              <div class="notif-text">
+                <div class="notif-title">Nueva alerta detectada</div>
+                <div class="notif-sub">Olivos · hace 2 min</div>
+              </div>
+            </div>
+
+            <div class="hero-ai-badge">
+              <span class="ai-badge-icon">🤖</span>
+              <span class="ai-badge-text">IA activa</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider" aria-hidden="true"></div>
+
+  <!-- ================================================================
+       ABOUT
+  ================================================================ -->
+  <section class="about" id="que-es" aria-labelledby="about-title">
+    <div class="container">
+      <div class="about-grid">
+        <div class="about-visual">
+          <div class="about-card reveal">
+            <div class="about-card-icon green">📷</div>
+            <div>
+              <div class="about-card-title">Las cámaras trabajan por vos</div>
+              <div class="about-card-desc">Las cámaras instaladas en el espacio público monitorean
+                automáticamente. Cuando detectan residuos, generan una alerta sin intervención humana.</div>
+            </div>
+          </div>
+
+          <div class="about-card reveal reveal-delay-1">
+            <div class="about-card-icon teal">⚡</div>
+            <div>
+              <div class="about-card-title">Alerta instantánea al equipo</div>
+              <div class="about-card-desc">En menos de 2 segundos, la alerta llega al panel con foto de
+                evidencia, ubicación exacta y hora del incidente. Nada se pierde.</div>
+            </div>
+          </div>
+
+          <div class="about-card reveal reveal-delay-2">
+            <div class="about-card-icon blue">🗺️</div>
+            <div>
+              <div class="about-card-title">Todo en un solo lugar</div>
+              <div class="about-card-desc">El panel centralizado muestra todas las alertas en un mapa
+                interactivo. Los supervisores priorizan y asignan operarios con un clic.</div>
+            </div>
+          </div>
+
+          <div class="about-card reveal reveal-delay-3">
+            <div class="about-card-icon amber">✅</div>
+            <div>
+              <div class="about-card-title">Seguimiento hasta el cierre</div>
+              <div class="about-card-desc">Cada incidente tiene su ciclo completo: se asigna, se atiende y
+                se cierra con registro fotográfico. Siempre sabés qué pasó y cuándo.</div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="section-tag green">¿Qué es TrashFlow?</div>
+          <h2 class="section-title" id="about-title">La ciudad más limpia, gestionada con IA</h2>
+          <p class="section-desc" style="margin-bottom: 24px;">
+            TrashFlow es la plataforma que conecta las cámaras de tu municipio con un panel de gestión inteligente.
+            Detecta residuos automáticamente, alerta a tu equipo al instante y centraliza todo el seguimiento.
+          </p>
+          <p class="section-desc">
+            Pasá de una gestión reactiva —donde el municipio responde a denuncias— a una gestión
+            <strong style="color: var(--accent-teal);">proactiva e inteligente</strong>, donde el sistema detecta
+            los problemas antes que el vecino los reporte.
+          </p>
+          <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 36px;">
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--text-secondary);">
+              <span style="color: var(--accent-teal); font-size: 1rem;">✓</span> Detección automática sin intervención humana
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--text-secondary);">
+              <span style="color: var(--accent-teal); font-size: 1rem;">✓</span> Panel centralizado con métricas y mapas en tiempo real
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--text-secondary);">
+              <span style="color: var(--accent-teal); font-size: 1rem;">✓</span> Evidencia fotográfica automática de cada incidente
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--text-secondary);">
+              <span style="color: var(--accent-teal); font-size: 1rem;">✓</span> Historial completo y auditable de toda la actividad
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--text-secondary);">
+              <span style="color: var(--accent-teal); font-size: 1rem;">✓</span> Acceso seguro por roles para todo el equipo municipal
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider" aria-hidden="true"></div>
+
+  <!-- ================================================================
+       HOW IT WORKS
+  ================================================================ -->
+  <section class="how" id="como-funciona" aria-labelledby="how-title">
+    <div class="container">
+      <div class="how-header reveal">
+        <div class="section-tag teal" style="display: inline-flex; margin: 0 auto 20px;">⚙️ Proceso</div>
+        <h2 class="section-title" id="how-title">¿Cómo funciona?</h2>
+        <p class="section-desc">De la detección a la resolución en cuatro pasos simples. Sin formularios, sin llamadas,
+          sin esperas.</p>
+      </div>
+
+      <div class="how-steps">
+        <div class="how-step reveal">
+          <div class="how-step-num">📷</div>
+          <h3 class="how-step-title">La cámara detecta</h3>
+          <p class="how-step-desc">Las cámaras instaladas en la vía pública monitorean el espacio público
+            de forma continua, las 24 horas del día.</p>
+        </div>
+        <div class="how-step reveal reveal-delay-1">
+          <div class="how-step-num">🤖</div>
+          <h3 class="how-step-title">La IA analiza</h3>
+          <p class="how-step-desc">El motor de inteligencia artificial identifica residuos en la imagen
+            con alta precisión y genera una alerta solo cuando es necesario.</p>
+        </div>
+        <div class="how-step reveal reveal-delay-2">
+          <div class="how-step-num">🔔</div>
+          <h3 class="how-step-title">Alerta automática</h3>
+          <p class="how-step-desc">En segundos, el panel recibe la alerta con foto, ubicación exacta y
+            hora del incidente. El supervisor la ve de inmediato.</p>
+        </div>
+        <div class="how-step reveal reveal-delay-3">
+          <div class="how-step-num">✅</div>
+          <h3 class="how-step-title">El equipo resuelve</h3>
+          <p class="how-step-desc">El supervisor asigna un operario, el equipo atiende el incidente y lo
+            cierra en el sistema con registro completo.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider" aria-hidden="true"></div>
+
+  <!-- ================================================================
+       FEATURES
+  ================================================================ -->
+  <section class="features" id="funcionalidades" aria-labelledby="features-title">
+    <div class="container">
+      <div class="features-header reveal">
+        <div class="section-tag blue">Funcionalidades</div>
+        <h2 class="section-title" id="features-title">Todo lo que necesita un municipio</h2>
+        <p class="section-desc">Desde la detección automática hasta los reportes históricos, TrashFlow cubre todo
+          el ciclo de gestión de residuos urbanos.</p>
+      </div>
+
+      <div class="features-grid">
+        <!-- BIG: Alertas en tiempo real -->
+        <div class="feature-card big c-teal reveal">
+          <div>
+            <div class="feature-icon teal">🔔</div>
+            <h3 class="feature-title">Gestión de alertas en tiempo real</h3>
+            <p class="feature-desc" style="margin-bottom: 16px;">Panel unificado con todas las alertas activas.
+              Filtrá por zona, estado y fecha. Asigná operarios y cerrá incidentes desde una sola pantalla,
+              sin papeles ni llamadas.</p>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <div style="display: flex; align-items: center; gap: 8px; font-size: 0.82rem; color: var(--text-secondary);">
+                <span style="color: var(--accent-teal);">→</span> Estados claros: Nueva · En curso · Resuelta
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px; font-size: 0.82rem; color: var(--text-secondary);">
+                <span style="color: var(--accent-teal);">→</span> Foto de evidencia adjunta a cada alerta
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px; font-size: 0.82rem; color: var(--text-secondary);">
+                <span style="color: var(--accent-teal);">→</span> Historial completo y exportable
+              </div>
+            </div>
+          </div>
+          <div class="feature-visual">
+            <div class="alert-list">
+              <div class="alert-item">
+                <div class="alert-dot dot-red"></div>
+                <span class="alert-zone">Av. Maipú 1200, Olivos</span>
+                <span class="alert-time">14:32</span>
+                <span class="alert-status status-nueva">Nueva</span>
+              </div>
+              <div class="alert-item">
+                <div class="alert-dot dot-amber"></div>
+                <span class="alert-zone">Lavalle y San Martín</span>
+                <span class="alert-time">13:15</span>
+                <span class="alert-status status-asignada">En curso</span>
+              </div>
+              <div class="alert-item">
+                <div class="alert-dot dot-teal"></div>
+                <span class="alert-zone">Florida Centro</span>
+                <span class="alert-time">11:58</span>
+                <span class="alert-status status-resuelta">Resuelta</span>
+              </div>
+              <div class="alert-item">
+                <div class="alert-dot dot-red"></div>
+                <span class="alert-zone">Munro - Ruta 202</span>
+                <span class="alert-time">11:20</span>
+                <span class="alert-status status-nueva">Nueva</span>
+              </div>
+              <div class="alert-item">
+                <div class="alert-dot dot-amber"></div>
+                <span class="alert-zone">Palermo y Catamarca</span>
+                <span class="alert-time">10:44</span>
+                <span class="alert-status status-asignada">En curso</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="feature-card c-blue reveal reveal-delay-1">
+          <div class="feature-icon blue">🗺️</div>
+          <h3 class="feature-title">Mapa de incidentes en vivo</h3>
+          <p class="feature-desc">Visualizá todas las alertas activas en un mapa interactivo. Cada incidente muestra
+            su ubicación exacta para que los operarios lleguen directamente, sin búsquedas ni confusiones.</p>
+        </div>
+
+        <div class="feature-card c-green reveal reveal-delay-2">
+          <div class="feature-icon green">🤖</div>
+          <h3 class="feature-title">Detección automática con IA</h3>
+          <p class="feature-desc">El motor de inteligencia artificial trabaja las 24 horas identificando
+            residuos con alta precisión. Menos falsos positivos, más alertas útiles para tu equipo.</p>
+        </div>
+
+        <div class="feature-card c-teal reveal">
+          <div class="feature-icon teal">📊</div>
+          <h3 class="feature-title">Panel de métricas y tendencias</h3>
+          <p class="feature-desc">Conocé el rendimiento de tu equipo: alertas del día, tiempo promedio de
+            respuesta y zonas con mayor actividad. Datos reales para tomar mejores decisiones.</p>
+        </div>
+
+        <div class="feature-card c-amber reveal reveal-delay-1">
+          <div class="feature-icon amber">👥</div>
+          <h3 class="feature-title">Gestión de operadores</h3>
+          <p class="feature-desc">Administrá a todo tu equipo desde el panel: altas, bajas y permisos
+            diferenciados según el rol de cada persona. Cada acción queda registrada.</p>
+        </div>
+
+        <div class="feature-card c-blue reveal reveal-delay-2">
+          <div class="feature-icon blue">📡</div>
+          <h3 class="feature-title">Red de cámaras centralizada</h3>
+          <p class="feature-desc">Gestioná toda la red de cámaras desde un solo lugar. Agregá nuevos
+            dispositivos, configurá zonas y monitoreá el estado operativo de cada punto.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider" aria-hidden="true"></div>
+
+  <!-- ================================================================
+       OBJECTIVES / BENEFICIOS
+  ================================================================ -->
+  <section class="objectives" id="beneficios" aria-labelledby="obj-title">
+    <div class="container">
+      <div class="objectives-header reveal">
+        <div class="section-tag amber" style="display: inline-flex; margin: 0 auto 20px;">Beneficios</div>
+        <h2 class="section-title" id="obj-title">Lo que TrashFlow le da a tu ciudad</h2>
+        <p class="section-desc">Resultados concretos que los municipios notan desde el primer día de uso.</p>
+      </div>
+
+      <div class="obj-grid">
+        <div class="obj-card reveal">
+          <div class="obj-num">01</div>
+          <div class="obj-icon">⚡</div>
+          <h3 class="obj-title">Respuesta en minutos, no en horas</h3>
+          <p class="obj-desc">Reducí drásticamente el tiempo entre la aparición de un foco de residuos y la
+            llegada del equipo. Las alertas automáticas eliminan la espera de denuncias ciudadanas.</p>
+        </div>
+
+        <div class="obj-card reveal reveal-delay-1">
+          <div class="obj-num">02</div>
+          <div class="obj-icon">🤖</div>
+          <h3 class="obj-title">Sin recorridas manuales</h3>
+          <p class="obj-desc">El sistema detecta y alerta de forma autónoma. Tu equipo deja de hacer recorridas
+            a ciegas y empieza a atender solo los puntos que realmente lo necesitan.</p>
+        </div>
+
+        <div class="obj-card reveal reveal-delay-2">
+          <div class="obj-num">03</div>
+          <div class="obj-icon">📍</div>
+          <h3 class="obj-title">Ubicación exacta, siempre</h3>
+          <p class="obj-desc">Cada alerta incluye la ubicación precisa del incidente en el mapa. Los operarios
+            llegan directo al punto sin perder tiempo buscando ni consultando por teléfono.</p>
+        </div>
+
+        <div class="obj-card reveal reveal-delay-3">
+          <div class="obj-num">04</div>
+          <div class="obj-icon">📈</div>
+          <h3 class="obj-title">Datos para tomar mejores decisiones</h3>
+          <p class="obj-desc">Identificá las zonas con más incidentes, los horarios críticos y la eficiencia
+            de tu equipo. Información real para planificar mejor el servicio de limpieza.</p>
+        </div>
+
+        <div class="obj-card reveal">
+          <div class="obj-num">05</div>
+          <div class="obj-icon">🔒</div>
+          <h3 class="obj-title">Todo registrado y auditable</h3>
+          <p class="obj-desc">Cada alerta, cada asignación y cada cierre queda guardado con fecha, hora y
+            responsable. El historial completo está siempre disponible para auditorías y reportes.</p>
+        </div>
+
+        <div class="obj-card reveal reveal-delay-1">
+          <div class="obj-num">06</div>
+          <div class="obj-icon">🌿</div>
+          <h3 class="obj-title">Una ciudad más limpia para todos</h3>
+          <p class="obj-desc">El impacto más importante es el más visible: calles más limpias, vecinos más
+            satisfechos y un espacio público que refleja la calidad de gestión de tu municipio.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider" aria-hidden="true"></div>
+
+  <!-- ================================================================
+       ARCHITECTURE (simplificada y comercial)
+  ================================================================ -->
+  <section class="arch" aria-labelledby="arch-title">
+    <div class="container">
+      <div style="text-align: center; margin-bottom: 48px;" class="reveal">
+        <div class="section-tag teal" style="display: inline-flex; margin: 0 auto 20px;">🔗 Integración</div>
+        <h2 class="section-title" id="arch-title">Tres piezas que trabajan juntas</h2>
+        <p class="section-desc" style="margin: 0 auto;">Un sistema pensado para integrarse a la infraestructura
+          municipal existente, sin reemplazar lo que ya tenés.</p>
+      </div>
+
+      <div class="arch-diagram reveal">
+        <div class="arch-node">
+          <div class="arch-node-icon">📷</div>
+          <div class="arch-node-title">Cámaras urbanas</div>
+          <div class="arch-node-sub">Las cámaras que ya<br>tiene tu municipio</div>
+        </div>
+
+        <div class="arch-arrow">
+          <div class="arch-arrow-line"></div>
+        </div>
+
+        <div class="arch-node">
+          <div class="arch-node-icon">🧠</div>
+          <div class="arch-node-title">Plataforma inteligente</div>
+          <div class="arch-node-sub">Motor de IA · Alertas<br>automáticas · Base de datos</div>
+        </div>
+
+        <div class="arch-arrow">
+          <div class="arch-arrow-line"></div>
+        </div>
+
+        <div class="arch-node">
+          <div class="arch-node-icon">💻</div>
+          <div class="arch-node-title">Panel de gestión</div>
+          <div class="arch-node-sub">Accesible desde cualquier<br>navegador, sin instalaciones</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider" aria-hidden="true"></div>
+
+  <!-- ================================================================
+       WHY TRASHFLOW (reemplaza Tech Stack)
+  ================================================================ -->
+  <section class="why" id="por-que" aria-labelledby="why-title">
+    <div class="container">
+      <div class="why-header reveal">
+        <div class="section-tag blue">¿Por qué TrashFlow?</div>
+        <h2 class="section-title" id="why-title">Diseñado para municipios reales</h2>
+        <p class="section-desc">No es un proyecto de laboratorio. TrashFlow fue construido pensando en los
+          desafíos concretos de la gestión urbana.</p>
+      </div>
+
+      <div class="why-grid">
+        <div class="why-card c-teal reveal">
+          <div class="why-icon teal">🏗️</div>
+          <div class="why-title">Sin hardware adicional</div>
+          <p class="why-desc">TrashFlow funciona con las cámaras que tu municipio ya tiene instaladas.
+            No necesitás comprar equipos nuevos ni hacer grandes inversiones en infraestructura.</p>
+        </div>
+
+        <div class="why-card c-blue reveal reveal-delay-1">
+          <div class="why-icon blue">🚀</div>
+          <div class="why-title">Implementación rápida</div>
+          <p class="why-desc">El sistema está listo para funcionar en días, no meses. La configuración
+            es sencilla y el equipo municipal puede operar el panel desde el primer día.</p>
+        </div>
+
+        <div class="why-card c-green reveal reveal-delay-2">
+          <div class="why-icon green">📐</div>
+          <div class="why-title">Escalable a cualquier tamaño</div>
+          <p class="why-desc">Tanto si tenés 5 cámaras como 500, el sistema se adapta. Podés empezar
+            con un barrio piloto y expandirte gradualmente a toda la ciudad.</p>
+        </div>
+
+        <div class="why-card c-amber reveal">
+          <div class="why-icon amber">🔒</div>
+          <div class="why-title">Seguro y confiable</div>
+          <p class="why-desc">Acceso controlado por roles, sesiones protegidas y registro de cada acción
+            realizada. La información del municipio está siempre resguardada.</p>
+        </div>
+
+        <div class="why-card c-teal reveal reveal-delay-1">
+          <div class="why-icon teal">🌐</div>
+          <div class="why-title">Accedé desde cualquier lugar</div>
+          <p class="why-desc">El panel es 100% web. Los supervisores pueden operar desde la oficina,
+            desde el campo o desde su teléfono, sin instalar nada.</p>
+        </div>
+
+        <div class="why-card c-blue reveal reveal-delay-2">
+          <div class="why-icon blue">📋</div>
+          <div class="why-title">Reportes listos para presentar</div>
+          <p class="why-desc">Generá informes de gestión con un clic. Datos claros sobre tiempo de respuesta,
+            zonas críticas y rendimiento del equipo, listos para compartir.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider" aria-hidden="true"></div>
+
+  <!-- ================================================================
+       IMPACT
+  ================================================================ -->
+  <section class="impact" aria-labelledby="impact-title">
+    <div class="container">
+      <div class="impact-inner reveal">
+        <div class="section-tag teal" style="display: inline-flex; margin: 0 auto 20px;">🌟 Resultados</div>
+        <h2 class="section-title" id="impact-title" style="font-size: clamp(1.8rem, 3.5vw, 2.6rem);">
+          Números que hablan por sí solos
+        </h2>
+        <p style="font-size: 1rem; color: rgba(255,255,255,0.5); max-width: 540px; margin: 0 auto; line-height: 1.7; position: relative; z-index: 1;">
+          TrashFlow convierte la infraestructura de cámaras existente en un sistema activo de gestión urbana,
+          sin necesidad de hardware adicional.
+        </p>
+
+        <div class="impact-stats">
+          <div class="impact-stat">
+            <span class="impact-stat-value" style="color: var(--accent-teal);">24/7</span>
+            <span class="impact-stat-label">Monitoreo continuo sin pausa</span>
+          </div>
+          <div class="impact-divider" aria-hidden="true"></div>
+          <div class="impact-stat">
+            <span class="impact-stat-value" style="color: var(--accent-blue);">&lt;2s</span>
+            <span class="impact-stat-label">Tiempo de detección y alerta</span>
+          </div>
+          <div class="impact-divider" aria-hidden="true"></div>
+          <div class="impact-stat">
+            <span class="impact-stat-value" style="color: var(--accent-amber);">100%</span>
+            <span class="impact-stat-label">De incidentes con evidencia fotográfica</span>
+          </div>
+          <div class="impact-divider" aria-hidden="true"></div>
+          <div class="impact-stat">
+            <span class="impact-stat-value" style="color: var(--primary-light);">0</span>
+            <span class="impact-stat-label">Incidentes sin seguimiento</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       CTA
+  ================================================================ -->
+  <section class="cta-section" aria-labelledby="cta-title">
+    <div class="container">
+      <div class="cta-inner reveal">
+        <div class="section-tag green" style="display: inline-flex; margin: 0 auto 24px;">🚀 Empezar</div>
+        <h2 class="cta-title" id="cta-title">
+          ¿Listo para transformar<br>tu ciudad?
+        </h2>
+        <p class="cta-desc">
+          Accedé al panel de TrashFlow y descubrí cómo tu municipio puede responder más rápido, gastar mejor
+          y ofrecer una ciudad más limpia para todos los vecinos.
+        </p>
+        <div class="cta-buttons">
+          <a href="web/paginas/login.html" class="btn-green-xl btn-xl" id="cta-btn-panel">
+            🏙️ Acceder al Panel
+          </a>
+          <a href="docs/instalacion.md" class="btn-outline btn-xl" id="cta-btn-docs" target="_blank">
+            📄 Ver documentación
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       FOOTER
+  ================================================================ -->
+  <footer class="footer" role="contentinfo">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-logo">
+          <img src="web/assets/isotipo.png" alt="TrashFlow">
+          <span class="footer-logo-text">TrashFlow</span>
+        </div>
+
+        <p class="footer-copy">© 2026 TrashFlow · Gestión inteligente de residuos urbanos · Vicente López</p>
+
+        <nav class="footer-links" aria-label="Links del footer">
+          <a href="#que-es">¿Qué es?</a>
+          <a href="#beneficios">Beneficios</a>
+          <a href="#por-que">¿Por qué TrashFlow?</a>
+          <a href="web/paginas/login.html">Panel</a>
+        </nav>
+      </div>
+    </div>
+  </footer>
+
+  <script src="web/js/landing.js" defer></script>
+
+</body>
+
+</html>

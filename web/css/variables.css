@@ -1,0 +1,83 @@
+/**
+ * TrashFlow — Sistema de Monitoreo de Residuos Urbano
+ * 
+ * Archivo: variables.css
+ * Descripción: Define el sistema de diseño visual (tokens de diseño) del proyecto.
+ *              Contiene las variables de colores personalizados, tipografías,
+ *              radios de borde, tiempos de transición, espaciados y sombras glow.
+ * 
+ * Dependencias:
+ *   - Ninguna (Es importado en todos los componentes y estilos)
+ * 
+ * Expone:
+ *   - Variables personalizadas CSS (--color-*, --font-*, --radius-*, etc.)
+ */
+
+:root {
+  /* Marca */
+  --primary: #3D5843;         /* Verde TrashFlow */
+  --primary-dark: #244039;    /* Hover/active/sombras */
+  --primary-light: #5C7A64;   /* Variante clara para fondos suaves */
+
+  /* Acentos */
+  --accent-blue: #479DE5;     /* Info / links / focus */
+  --accent-teal: #60B7BA;     /* Elementos tech/IA, gráficos secundarios */
+
+  /* Neutros */
+  --bg-dark: #1A1A1A;         /* Fondo principal (sidebar, navbar) */
+  --bg-dark-alt: #232B27;     /* Fondo de tarjetas sobre --bg-dark (con tinte verde, no púrpura) */
+  --bg-cream: #EDE7D9;        /* Fondo alternativo claro si se usa modo claro */
+  --bg-gray: #D9D8D4;         /* Separadores, bordes sutiles */
+  --white: #FFFFFF;
+  --text-dark: #1A1A1A;
+  --text-muted: #7A857F;
+
+  /* Estados de alerta */
+  --status-nueva: #E5484D;
+  --status-asignada: #F5A623;
+  --status-resuelta: #3D5843;
+
+  /* Old Theme Mapping for backwards compatibility and global updates */
+  --color-bg: var(--bg-dark);
+  --color-sidebar: var(--bg-dark);
+  --color-card: var(--bg-dark-alt);
+  --color-card-hover: #2A332E; /* Ligeramente más claro con tinte verde */
+  --color-border: rgba(255, 255, 255, 0.06);
+  --color-text-primary: var(--white);
+  --color-text-secondary: var(--text-muted);
+  --color-accent-blue: var(--accent-blue);
+  --color-accent-teal: var(--accent-teal);
+  --color-success: var(--status-resuelta);
+  --color-warning: var(--status-asignada);
+  --color-info: var(--accent-blue);
+  --color-danger: var(--status-nueva);
+
+  /* Fonts */
+  --font-primary: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-title: 'Space Grotesk', 'Inter', system-ui, -apple-system, sans-serif;
+
+  /* Border Radii */
+  --radius-card: 12px;
+  --radius-button: 8px;
+  --radius-badge: 6px;
+  --radius-input: 8px;
+
+  /* Transitions */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.25s ease;
+  --transition-slow: 0.4s ease;
+
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.4);
+  --shadow-glow: 0 0 15px rgba(96, 183, 186, 0.15);
+  --shadow-glow-blue: 0 0 15px rgba(71, 157, 229, 0.3);
+}

@@ -1,0 +1,5 @@
+train: C:\xampp\htdocs\dashboard\TrashFlow-PRESENTACION\modelo\dataset\train\images
+val: C:\xampp\htdocs\dashboard\TrashFlow-PRESENTACION\modelo\dataset\valid\images
+test: C:\xampp\htdocs\dashboard\TrashFlow-PRESENTACION\modelo\dataset\test\images
+nc: 1
+names: ['Garbage']

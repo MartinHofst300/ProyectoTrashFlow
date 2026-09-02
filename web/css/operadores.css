@@ -1,0 +1,373 @@
+/* ============================================================
+   operadores.css — Módulo de Gestión de Operadores de Campo
+   Rediseño completo con layout de tarjetas (sin tabla, sin scroll horizontal)
+   ============================================================ */
+
+/* ── Header superior ──────────────────────────────────────── */
+.operadores-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--spacing-lg);
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+}
+
+/* ── Grid de tarjetas ─────────────────────────────────────── */
+.operadores-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+/* ── Tarjeta individual de operario ──────────────────────── */
+.operador-card {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
+}
+
+.operador-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: rgba(255,255,255,0.12);
+}
+
+.operador-card.inactivo {
+  opacity: 0.55;
+}
+
+/* ── Cabecera de la tarjeta: avatar + nombre + estado ──────── */
+.card-header-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-md);
+}
+
+.operador-avatar {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  font-weight: 700;
+  font-family: var(--font-title);
+  color: #fff;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.operador-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.operador-nombre {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-transform: capitalize;
+}
+
+.operador-email {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+
+/* ── Badge de estado ─────────────────────────────────────── */
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: var(--radius-badge);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.badge-activo {
+  background-color: rgba(61, 88, 67, 0.25);
+  color: #7cbf85;
+  border: 1px solid rgba(61, 88, 67, 0.5);
+}
+
+.badge-inactivo {
+  background-color: rgba(229, 72, 77, 0.12);
+  color: #f17070;
+  border: 1px solid rgba(229, 72, 77, 0.3);
+}
+
+/* ── Detalles: teléfono y zona ──────────────────────────── */
+.card-details {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.card-detail-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.card-detail-item svg {
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+.zona-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(61, 88, 67, 0.15);
+  color: #7cbf85;
+  border: 1px solid rgba(61, 88, 67, 0.35);
+  border-radius: 6px;
+  padding: 2px 9px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.zona-badge-empty {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+/* ── Estadísticas ────────────────────────────────────────── */
+.card-stats {
+  display: flex;
+  gap: var(--spacing-sm);
+  padding-top: var(--spacing-sm);
+  border-top: 1px solid var(--color-border);
+}
+
+.stat-block {
+  flex: 1;
+  text-align: center;
+  padding: var(--spacing-sm) var(--spacing-xs);
+  background: rgba(0,0,0,0.2);
+  border-radius: 8px;
+}
+
+.stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1;
+}
+
+.stat-value.active {
+  color: #f5a623;
+}
+
+.stat-label {
+  font-size: 10px;
+  color: var(--color-text-secondary);
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ── Acciones ────────────────────────────────────────────── */
+.card-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.btn-action {
+  flex: 1;
+  padding: 8px 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-button);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.btn-action:hover {
+  background: rgba(255,255,255,0.06);
+  color: var(--color-text-primary);
+  border-color: rgba(255,255,255,0.15);
+}
+
+.btn-action.btn-edit:hover {
+  color: var(--accent-blue);
+  border-color: rgba(71, 157, 229, 0.35);
+  background: rgba(71, 157, 229, 0.08);
+}
+
+.btn-action.btn-toggle-off:hover {
+  color: #f17070;
+  border-color: rgba(229, 72, 77, 0.35);
+  background: rgba(229, 72, 77, 0.08);
+}
+
+.btn-action.btn-toggle-on:hover {
+  color: #7cbf85;
+  border-color: rgba(61, 88, 67, 0.5);
+  background: rgba(61, 88, 67, 0.12);
+}
+
+.btn-action.btn-delete:hover {
+  color: var(--color-danger);
+  border-color: rgba(229, 72, 77, 0.3);
+  background: rgba(229, 72, 77, 0.06);
+}
+
+/* ── Estado vacío ────────────────────────────────────────── */
+.empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: var(--spacing-xl) 0;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+/* ── Modales ─────────────────────────────────────────────── */
+.modal-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-md);
+  width: 100%;
+}
+
+@media (max-width: 576px) {
+  .modal-form-grid { grid-template-columns: 1fr; }
+  .full-width-field { grid-column: span 1; }
+}
+
+.full-width-field {
+  grid-column: span 2;
+}
+
+.modal-header-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  width: 100%;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: var(--spacing-sm);
+  margin-bottom: var(--spacing-xs);
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
+  width: 100%;
+  margin-top: var(--spacing-md);
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--spacing-md);
+}
+
+.form-error {
+  color: var(--color-danger);
+  font-size: 13px;
+  margin-top: var(--spacing-xs);
+  display: none;
+}
+
+/* ── Select oscuro ───────────────────────────────────────── */
+select.form-input {
+  color-scheme: dark;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237A857F' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+  cursor: pointer;
+}
+
+select.form-input option {
+  background-color: #1d2520;
+  color: #e2e8f0;
+}
+
+/* ── Toggle de contraseña ────────────────────────────────── */
+.input-container {
+  position: relative;
+  width: 100%;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toggle-password:hover { color: var(--color-text-primary); }
+
+/* ============================================================
+   RESPONSIVE — Operadores (breakpoints adicionales)
+============================================================ */
+@media (max-width: 1024px) {
+  .operadores-grid {
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .operadores-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .operadores-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .card-stats {
+    gap: 4px;
+  }
+
+  .stat-value {
+    font-size: 16px;
+  }
+
+  .modal-footer {
+    flex-direction: column;
+  }
+
+  .modal-footer .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
