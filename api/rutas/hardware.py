@@ -128,9 +128,11 @@ def get_pending_alert():
                 a.latitud,
                 a.longitud,
                 a.estado_id,
-                a.confianza
+                a.confianza,
+                z.nombre      AS zona_nombre
             FROM notificaciones n
             JOIN alertas a ON n.alerta_id = a.id
+            LEFT JOIN zonas z ON a.zona_id = z.id
             WHERE n.usuario_id = %s
               AND n.tipo       = 'alerta_asignada'
               AND n.leida      = 0
@@ -171,6 +173,7 @@ def get_pending_alert():
                 "notif_id":         notif['notif_id'],
                 "alerta_id":        notif['alerta_id'],
                 "titulo":           notif['titulo'],
+                "zona":             notif['zona_nombre'] or 'Sin zona',
                 "direccion":        direccion_corta,
                 "direccion_completa": direccion_completa,
                 "latitud":          float(notif['latitud'])  if notif['latitud']  else None,

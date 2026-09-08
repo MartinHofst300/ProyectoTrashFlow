@@ -14,10 +14,11 @@
  *   - requestAPI(): Wrapper de fetch para hacer llamadas HTTP y manejar la expiración del token (401).
  */
 
-// URL base para conectar con el servidor de la API de Flask. Por defecto corre en el puerto 5000.
-const BASE_URL = 'http://localhost:5000';
+// URL base para conectar con el servidor de la API de Flask. Puerto 5005 evita colisiones en Windows.
+const BASE_URL = 'http://127.0.0.1:5005';
 
 const USE_MOCK = false; 
+
 
 
 /**
@@ -74,7 +75,7 @@ async function requestAPI(endpoint, options = {}) {
     // Si la respuesta no es exitosa (códigos 4xx o 5xx), obtiene el mensaje de error y lanza una excepción
     if (!response.ok) {
       const errData = await response.json().catch(() => ({}));
-      throw new Error(errData.message || `Error del servidor: ${response.status}`);
+      throw new Error(errData.mensaje || errData.message || `Error del servidor: ${response.status}`);
     }
 
     // Retorna la respuesta serializada en un objeto JS
@@ -92,31 +93,31 @@ async function requestAPI(endpoint, options = {}) {
 // --- SIMULADOR DE BASE DE DATOS Y RUTA MOCK ---
 // Este conjunto de datos imita la estructura de la base de datos de MySQL para que el sistema funcione offline.
 const mockAlerts = [
-  { id: 'TF-1025', foto: '../assets/trash1.png', zona: 'Olivos', direccion: 'Av. del Libertador 1520', tipo: 'Bolsa de residuos', estado: 'pendiente', fecha: '2026-06-18T14:30:00', operador: 'Sin asignar', confianza: 94, latitud: -34.512, longitud: -58.485, zona_id: 2, zona_color: '#F5A623' },
-  { id: 'TF-1024', foto: '../assets/trash2.png', zona: 'Centro', direccion: 'Av. Maipú 2105', tipo: 'Desechos voluminosos', estado: 'asignada', fecha: '2026-06-18T13:15:00', operador: 'Juan Pérez', confianza: 87, latitud: -34.522, longitud: -58.472, zona_id: 1, zona_color: '#EF4444' },
-  { id: 'TF-1023', foto: '../assets/trash3.png', zona: 'Munro', direccion: 'Av. Mitre 3210', tipo: 'Cartones', estado: 'en_proceso', fecha: '2026-06-18T11:45:00', operador: 'Sofía Rodríguez', confianza: 78, latitud: -34.530, longitud: -58.520, zona_id: 4, zona_color: '#2ECC71' },
-  { id: 'TF-1022', foto: '../assets/trash1.png', zona: 'La Lucila', direccion: 'Paraná 950', tipo: 'Bolsa de residuos', estado: 'resuelta', fecha: '2026-06-18T09:20:00', operador: 'Carlos Gómez', confianza: 98, latitud: -34.500, longitud: -58.488, zona_id: 3, zona_color: '#4A90D9' },
-  { id: 'TF-1021', foto: '../assets/trash2.png', zona: 'Florida', direccion: 'Av. San Martín 2480', tipo: 'Escombros', estado: 'descartada', fecha: '2026-06-18T08:05:00', operador: 'Sin asignar', confianza: 52, latitud: -34.536, longitud: -58.490, zona_id: 6, zona_color: '#EC4899' },
-  { id: 'TF-1020', foto: '../assets/trash3.png', zona: 'Villa Martelli', direccion: 'Laprida 3800', tipo: 'Cartones', estado: 'pendiente', fecha: '2026-06-17T17:40:00', operador: 'Sin asignar', confianza: 61, latitud: -34.548, longitud: -58.508, zona_id: 5, zona_color: '#8B5CF6' },
-  { id: 'TF-1019', foto: '../assets/trash1.png', zona: 'Carapachay', direccion: 'Independencia 3100', tipo: 'Bolsa de residuos', estado: 'resuelta', fecha: '2026-06-17T15:10:00', operador: 'Ana Martínez', confianza: 92, latitud: -34.535, longitud: -58.528, zona_id: 7, zona_color: '#14B8A6' },
-  { id: 'TF-1018', foto: '../assets/trash2.png', zona: 'Olivos', direccion: 'Ugarte 1820', tipo: 'Desechos voluminosos', estado: 'asignada', fecha: '2026-06-17T11:22:00', operador: 'Juan Pérez', confianza: 82, latitud: -34.513, longitud: -58.486, zona_id: 2, zona_color: '#F5A623' },
-  { id: 'TF-1017', foto: '../assets/trash3.png', zona: 'Centro', direccion: 'Ricardo Gutiérrez 1200', tipo: 'Escombros', estado: 'en_proceso', fecha: '2026-06-17T09:05:00', operador: 'Carlos Gómez', confianza: 74, latitud: -34.521, longitud: -58.471, zona_id: 1, zona_color: '#EF4444' },
-  { id: 'TF-1016', foto: '../assets/trash1.png', zona: 'La Lucila', direccion: 'Rawson 3500', tipo: 'Bolsa de residuos', estado: 'resuelta', fecha: '2026-06-16T16:50:00', operador: 'Sofía Rodríguez', confianza: 95, latitud: -34.501, longitud: -58.489, zona_id: 3, zona_color: '#4A90D9' },
-  { id: 'TF-1015', foto: '../assets/trash2.png', zona: 'Munro', direccion: 'Vélez Sarsfield 4100', tipo: 'Desechos voluminosos', estado: 'pendiente', fecha: '2026-06-16T14:12:00', operador: 'Sin asignar', confianza: 69, latitud: -34.531, longitud: -58.521, zona_id: 4, zona_color: '#2ECC71' },
-  { id: 'TF-1014', foto: '../assets/trash3.png', zona: 'Florida', direccion: 'Gral. Roca 1900', tipo: 'Cartones', estado: 'resuelta', fecha: '2026-06-16T10:30:00', operador: 'Ana Martínez', confianza: 89, latitud: -34.537, longitud: -58.491, zona_id: 6, zona_color: '#EC4899' },
-  { id: 'TF-1013', foto: '../assets/trash1.png', zona: 'Villa Martelli', direccion: 'Av. Constituyentes 5200', tipo: 'Bolsa de residuos', estado: 'descartada', fecha: '2026-06-16T08:15:00', operador: 'Sin asignar', confianza: 45, latitud: -34.549, longitud: -58.509, zona_id: 5, zona_color: '#8B5CF6' },
-  { id: 'TF-1012', foto: '../assets/trash2.png', zona: 'Carapachay', direccion: 'Drysdale 5800', tipo: 'Escombros', estado: 'resuelta', fecha: '2026-06-15T18:00:00', operador: 'Carlos Gómez', confianza: 97, latitud: -34.536, longitud: -58.529, zona_id: 7, zona_color: '#14B8A6' },
-  { id: 'TF-1011', foto: '../assets/trash3.png', zona: 'Olivos', direccion: 'Corrientes 1540', tipo: 'Cartones', estado: 'resuelta', fecha: '2026-06-15T14:45:00', operador: 'Juan Pérez', confianza: 91, latitud: -34.514, longitud: -58.487, zona_id: 2, zona_color: '#F5A623' },
-  { id: 'TF-1010', foto: '../assets/trash1.png', zona: 'Centro', direccion: 'Borges 2200', tipo: 'Bolsa de residuos', estado: 'en_proceso', fecha: '2026-06-15T10:10:00', operador: 'Sofía Rodríguez', confianza: 83, latitud: -34.523, longitud: -58.473, zona_id: 1, zona_color: '#EF4444' },
-  { id: 'TF-1009', foto: '../assets/trash2.png', zona: 'La Lucila', direccion: 'Roma 800', tipo: 'Desechos voluminosos', estado: 'resuelta', fecha: '2026-06-15T09:05:00', operador: 'Ana Martínez', confianza: 90, latitud: -34.502, longitud: -58.490, zona_id: 3, zona_color: '#4A90D9' },
-  { id: 'TF-1008', foto: '../assets/trash3.png', zona: 'Munro', direccion: 'Carlos Villate 4050', tipo: 'Cartones', estado: 'resuelta', fecha: '2026-06-14T16:30:00', operador: 'Carlos Gómez', confianza: 86, latitud: -34.532, longitud: -58.522, zona_id: 4, zona_color: '#2ECC71' },
-  { id: 'TF-1007', foto: '../assets/trash1.png', zona: 'Florida', direccion: 'Melos 2200', tipo: 'Bolsa de residuos', estado: 'descartada', fecha: '2026-06-14T11:20:00', operador: 'Sin asignar', confianza: 58, latitud: -34.538, longitud: -58.492, zona_id: 6, zona_color: '#EC4899' },
-  { id: 'TF-1006', foto: '../assets/trash2.png', zona: 'Villa Martelli', direccion: 'Chile 400', tipo: 'Escombros', estado: 'resuelta', fecha: '2026-06-14T08:50:00', operador: 'Juan Pérez', confianza: 96, latitud: -34.550, longitud: -58.510, zona_id: 5, zona_color: '#8B5CF6' },
-  { id: 'TF-1005', foto: '../assets/trash3.png', zona: 'Carapachay', direccion: 'Uriburu 5300', tipo: 'Cartones', estado: 'resuelta', fecha: '2026-06-13T17:15:00', operador: 'Sofía Rodríguez', confianza: 88, latitud: -34.537, longitud: -58.530, zona_id: 7, zona_color: '#14B8A6' },
-  { id: 'TF-1004', foto: '../assets/trash1.png', zona: 'Olivos', direccion: 'Malaver 2600', tipo: 'Bolsa de residuos', estado: 'resuelta', fecha: '2026-06-13T12:00:00', operador: 'Ana Martínez', confianza: 93, latitud: -34.515, longitud: -58.488, zona_id: 2, zona_color: '#F5A623' },
-  { id: 'TF-1003', foto: '../assets/trash2.png', zona: 'Centro', direccion: 'Av. Maipú 1800', tipo: 'Desechos voluminosos', estado: 'resuelta', fecha: '2026-06-13T10:45:00', operador: 'Carlos Gómez', confianza: 91, latitud: -34.524, longitud: -58.474, zona_id: 1, zona_color: '#EF4444' },
-  { id: 'TF-1002', foto: '../assets/trash3.png', zona: 'La Lucila', direccion: 'Díaz Vélez 2500', tipo: 'Cartones', estado: 'resuelta', fecha: '2026-06-12T15:30:00', operador: 'Juan Pérez', confianza: 85, latitud: -34.503, longitud: -58.491, zona_id: 3, zona_color: '#4A90D9' },
-  { id: 'TF-1001', foto: '../assets/trash1.png', zona: 'Munro', direccion: 'Belgrano 2800', tipo: 'Bolsa de residuos', estado: 'resuelta', fecha: '2026-06-12T09:15:00', operador: 'Sofía Rodríguez', confianza: 97, latitud: -34.533, longitud: -58.523, zona_id: 4, zona_color: '#2ECC71' }
+  { id: 'TF-1025', foto: '../assets/trash1.png', zona: 'Olivos', direccion: 'Av. del Libertador 1520', tipo: 'Bolsa de residuos', estado: 'pendiente', fecha: '2026-06-18T14:30:00', operador: 'Sin asignar', latitud: -34.512, longitud: -58.485, zona_id: 2, zona_color: '#F5A623' },
+  { id: 'TF-1024', foto: '../assets/trash2.png', zona: 'Centro', direccion: 'Av. Maipú 2105', tipo: 'Desechos voluminosos', estado: 'alertada', fecha: '2026-06-18T13:15:00', operador: 'Juan Pérez', latitud: -34.522, longitud: -58.472, zona_id: 1, zona_color: '#EF4444' },
+  { id: 'TF-1023', foto: '../assets/trash3.png', zona: 'Munro', direccion: 'Av. Mitre 3210', tipo: 'Cartones', estado: 'alertada', fecha: '2026-06-18T11:45:00', operador: 'Sofía Rodríguez', latitud: -34.530, longitud: -58.520, zona_id: 4, zona_color: '#2ECC71' },
+  { id: 'TF-1022', foto: '../assets/trash1.png', zona: 'La Lucila', direccion: 'Paraná 950', tipo: 'Bolsa de residuos', estado: 'resuelta', fecha: '2026-06-18T09:20:00', operador: 'Carlos Gómez', latitud: -34.500, longitud: -58.488, zona_id: 3, zona_color: '#4A90D9' },
+  { id: 'TF-1021', foto: '../assets/trash2.png', zona: 'Florida', direccion: 'Av. San Martín 2480', tipo: 'Escombros', estado: 'descartada', fecha: '2026-06-18T08:05:00', operador: 'Sin asignar', latitud: -34.536, longitud: -58.490, zona_id: 6, zona_color: '#EC4899' },
+  { id: 'TF-1020', foto: '../assets/trash3.png', zona: 'Villa Martelli', direccion: 'Laprida 3800', tipo: 'Cartones', estado: 'pendiente', fecha: '2026-06-17T17:40:00', operador: 'Sin asignar', latitud: -34.548, longitud: -58.508, zona_id: 5, zona_color: '#8B5CF6' },
+  { id: 'TF-1019', foto: '../assets/trash1.png', zona: 'Carapachay', direccion: 'Independencia 3100', tipo: 'Bolsa de residuos', estado: 'resuelta', fecha: '2026-06-17T15:10:00', operador: 'Ana Martínez', latitud: -34.535, longitud: -58.528, zona_id: 7, zona_color: '#14B8A6' },
+  { id: 'TF-1018', foto: '../assets/trash2.png', zona: 'Olivos', direccion: 'Ugarte 1820', tipo: 'Desechos voluminosos', estado: 'alertada', fecha: '2026-06-17T11:22:00', operador: 'Juan Pérez', latitud: -34.513, longitud: -58.486, zona_id: 2, zona_color: '#F5A623' },
+  { id: 'TF-1017', foto: '../assets/trash3.png', zona: 'Centro', direccion: 'Ricardo Gutiérrez 1200', tipo: 'Escombros', estado: 'alertada', fecha: '2026-06-17T09:05:00', operador: 'Carlos Gómez', latitud: -34.521, longitud: -58.471, zona_id: 1, zona_color: '#EF4444' },
+  { id: 'TF-1016', foto: '../assets/trash1.png', zona: 'La Lucila', direccion: 'Rawson 3500', tipo: 'Bolsa de residuos', estado: 'resuelta', fecha: '2026-06-16T16:50:00', operador: 'Sofía Rodríguez', latitud: -34.501, longitud: -58.489, zona_id: 3, zona_color: '#4A90D9' },
+  { id: 'TF-1015', foto: '../assets/trash2.png', zona: 'Munro', direccion: 'Vélez Sarsfield 4100', tipo: 'Desechos voluminosos', estado: 'pendiente', fecha: '2026-06-16T14:12:00', operador: 'Sin asignar', latitud: -34.531, longitud: -58.521, zona_id: 4, zona_color: '#2ECC71' },
+  { id: 'TF-1014', foto: '../assets/trash3.png', zona: 'Florida', direccion: 'Gral. Roca 1900', tipo: 'Cartones', estado: 'resuelta', fecha: '2026-06-16T10:30:00', operador: 'Ana Martínez', latitud: -34.537, longitud: -58.491, zona_id: 6, zona_color: '#EC4899' },
+  { id: 'TF-1013', foto: '../assets/trash1.png', zona: 'Villa Martelli', direccion: 'Av. Constituyentes 5200', tipo: 'Bolsa de residuos', estado: 'descartada', fecha: '2026-06-16T08:15:00', operador: 'Sin asignar', latitud: -34.549, longitud: -58.509, zona_id: 5, zona_color: '#8B5CF6' },
+  { id: 'TF-1012', foto: '../assets/trash2.png', zona: 'Carapachay', direccion: 'Drysdale 5800', tipo: 'Escombros', estado: 'resuelta', fecha: '2026-06-15T18:00:00', operador: 'Carlos Gómez', latitud: -34.536, longitud: -58.529, zona_id: 7, zona_color: '#14B8A6' },
+  { id: 'TF-1011', foto: '../assets/trash3.png', zona: 'Olivos', direccion: 'Corrientes 1540', tipo: 'Cartones', estado: 'resuelta', fecha: '2026-06-15T14:45:00', operador: 'Juan Pérez', latitud: -34.514, longitud: -58.487, zona_id: 2, zona_color: '#F5A623' },
+  { id: 'TF-1010', foto: '../assets/trash1.png', zona: 'Centro', direccion: 'Borges 2200', tipo: 'Bolsa de residuos', estado: 'alertada', fecha: '2026-06-15T10:10:00', operador: 'Sofía Rodríguez', latitud: -34.523, longitud: -58.473, zona_id: 1, zona_color: '#EF4444' },
+  { id: 'TF-1009', foto: '../assets/trash2.png', zona: 'La Lucila', direccion: 'Roma 800', tipo: 'Desechos voluminosos', estado: 'resuelta', fecha: '2026-06-15T09:05:00', operador: 'Ana Martínez', latitud: -34.502, longitud: -58.490, zona_id: 3, zona_color: '#4A90D9' },
+  { id: 'TF-1008', foto: '../assets/trash3.png', zona: 'Munro', direccion: 'Carlos Villate 4050', tipo: 'Cartones', estado: 'resuelta', fecha: '2026-06-14T16:30:00', operador: 'Carlos Gómez', latitud: -34.532, longitud: -58.522, zona_id: 4, zona_color: '#2ECC71' },
+  { id: 'TF-1007', foto: '../assets/trash1.png', zona: 'Florida', direccion: 'Melos 2200', tipo: 'Bolsa de residuos', estado: 'descartada', fecha: '2026-06-14T11:20:00', operador: 'Sin asignar', latitud: -34.538, longitud: -58.492, zona_id: 6, zona_color: '#EC4899' },
+  { id: 'TF-1006', foto: '../assets/trash2.png', zona: 'Villa Martelli', direccion: 'Chile 400', tipo: 'Escombros', estado: 'resuelta', fecha: '2026-06-14T08:50:00', operador: 'Juan Pérez', latitud: -34.550, longitud: -58.510, zona_id: 5, zona_color: '#8B5CF6' },
+  { id: 'TF-1005', foto: '../assets/trash3.png', zona: 'Carapachay', direccion: 'Uriburu 5300', tipo: 'Cartones', estado: 'resuelta', fecha: '2026-06-13T17:15:00', operador: 'Sofía Rodríguez', latitud: -34.537, longitud: -58.530, zona_id: 7, zona_color: '#14B8A6' },
+  { id: 'TF-1004', foto: '../assets/trash1.png', zona: 'Olivos', direccion: 'Malaver 2600', tipo: 'Bolsa de residuos', estado: 'resuelta', fecha: '2026-06-13T12:00:00', operador: 'Ana Martínez', latitud: -34.515, longitud: -58.488, zona_id: 2, zona_color: '#F5A623' },
+  { id: 'TF-1003', foto: '../assets/trash2.png', zona: 'Centro', direccion: 'Av. Maipú 1800', tipo: 'Desechos voluminosos', estado: 'resuelta', fecha: '2026-06-13T10:45:00', operador: 'Carlos Gómez', latitud: -34.524, longitud: -58.474, zona_id: 1, zona_color: '#EF4444' },
+  { id: 'TF-1002', foto: '../assets/trash3.png', zona: 'La Lucila', direccion: 'Díaz Vélez 2500', tipo: 'Cartones', estado: 'resuelta', fecha: '2026-06-12T15:30:00', operador: 'Juan Pérez', latitud: -34.503, longitud: -58.491, zona_id: 3, zona_color: '#4A90D9' },
+  { id: 'TF-1001', foto: '../assets/trash1.png', zona: 'Munro', direccion: 'Belgrano 2800', tipo: 'Bolsa de residuos', estado: 'resuelta', fecha: '2026-06-12T09:15:00', operador: 'Sofía Rodríguez', latitud: -34.533, longitud: -58.523, zona_id: 4, zona_color: '#2ECC71' }
 ];
 
 /**
@@ -255,13 +256,18 @@ async function fetchMock(endpoint, options = {}) {
     if (estado && estado !== 'Todos los Estados') {
       const stateMap = {
         'Pendiente': 'pendiente',
-        'Asignada': 'asignada',
-        'En Proceso': 'en_proceso',
+        'Alertada': 'alertada',
+        'Asignada': 'alertada',
+        'En Proceso': 'alertada',
         'Resuelta': 'resuelta',
         'Descartada': 'descartada'
       };
       const dbEstado = stateMap[estado] || estado.toLowerCase();
-      list = list.filter(a => a.estado === dbEstado);
+      if (dbEstado === 'alertada') {
+        list = list.filter(a => a.estado === 'alertada' || a.estado === 'en_proceso' || a.estado === 'asignada');
+      } else {
+        list = list.filter(a => a.estado === dbEstado);
+      }
     }
 
     // Filtro por fecha de captura
@@ -332,5 +338,277 @@ async function fetchMock(endpoint, options = {}) {
     return mockAlerts[alertIndex];
   }
 
+  // 11. Simulación de GET /api/operadores
+  if (path === '/api/operadores' && (!options.method || options.method === 'GET')) {
+    return [
+      { id: 4, nombre: 'Carlos', apellido: 'Gómez', nombre_completo: 'Carlos Gómez', zona_nombre: 'Centro', activo: 1, alertas_activas: 2, resueltas_hoy: 5, total_historico: 42, dispositivo_nombre: 'Dispositivo Móvil #1', dispositivo_ultima_conexion: '2026-06-18 14:28:00' },
+      { id: 5, nombre: 'Juan', apellido: 'Pérez', nombre_completo: 'Juan Pérez', zona_nombre: 'Olivos', activo: 1, alertas_activas: 1, resueltas_hoy: 3, total_historico: 35, dispositivo_nombre: 'Dispositivo Móvil #2', dispositivo_ultima_conexion: '2026-06-18 14:15:00' },
+      { id: 6, nombre: 'Sofía', apellido: 'Rodríguez', nombre_completo: 'Sofía Rodríguez', zona_nombre: 'Munro', activo: 1, alertas_activas: 1, resueltas_hoy: 4, total_historico: 29, dispositivo_nombre: null, dispositivo_ultima_conexion: null },
+      { id: 7, nombre: 'Ana', apellido: 'Martínez', nombre_completo: 'Ana Martínez', zona_nombre: 'La Lucila', activo: 1, alertas_activas: 0, resueltas_hoy: 6, total_historico: 51, dispositivo_nombre: 'Dispositivo Base Central', dispositivo_ultima_conexion: '2026-06-18 14:31:00' }
+    ];
+  }
+
+  // 12. Simulación de GET /api/hardware/dispositivos
+  if (path === '/api/hardware/dispositivos' && (!options.method || options.method === 'GET')) {
+    let devList = JSON.parse(localStorage.getItem('trashflow_mock_devices') || 'null');
+    if (!devList) {
+      devList = [
+        {
+          id: 1,
+          nombre: "Dispositivo Móvil #1 — Cuadrilla Centro",
+          token_device: "trashflow_dev_token_centro_2026",
+          token_preview: "...centro_2026",
+          operador_id: 4,
+          operador_nombre: "Carlos",
+          operador_apellido: "Gómez",
+          activo: 1,
+          ultima_conexion: new Date(Date.now() - 2 * 60000).toISOString().replace('T', ' ').substring(0, 19),
+          creado_en: "2026-06-01 10:00:00"
+        },
+        {
+          id: 2,
+          nombre: "Dispositivo Móvil #2 — Cuadrilla Olivos",
+          token_device: "trashflow_dev_7f8a9b1c2d3e4f5a",
+          token_preview: "...c2d3e4f5a",
+          operador_id: 5,
+          operador_nombre: "Juan",
+          operador_apellido: "Pérez",
+          activo: 1,
+          ultima_conexion: new Date(Date.now() - 14 * 60000).toISOString().replace('T', ' ').substring(0, 19),
+          creado_en: "2026-06-05 11:30:00"
+        },
+        {
+          id: 3,
+          nombre: "Dispositivo Base Central Vicente López",
+          token_device: "trashflow_dev_1122334455667788",
+          token_preview: "...55667788",
+          operador_id: 7,
+          operador_nombre: "Ana",
+          operador_apellido: "Martínez",
+          activo: 1,
+          ultima_conexion: new Date(Date.now() - 1 * 60000).toISOString().replace('T', ' ').substring(0, 19),
+          creado_en: "2026-06-10 09:15:00"
+        },
+        {
+          id: 4,
+          nombre: "Dispositivo Móvil #3 — Reserva / Reemplazo",
+          token_device: "trashflow_dev_9988776655443322",
+          token_preview: "...55443322",
+          operador_id: null,
+          operador_nombre: null,
+          operador_apellido: null,
+          activo: 1,
+          ultima_conexion: null,
+          creado_en: "2026-06-15 16:40:00"
+        }
+      ];
+      localStorage.setItem('trashflow_mock_devices', JSON.stringify(devList));
+    }
+    return { dispositivos: devList, total: devList.length };
+  }
+
+  // 13. Simulación de POST /api/hardware/dispositivos (Crear dispositivo)
+  if (path === '/api/hardware/dispositivos' && options.method === 'POST') {
+    const { nombre } = JSON.parse(options.body || '{}');
+    if (!nombre) throw new Error("El nombre del dispositivo es obligatorio.");
+    const devList = JSON.parse(localStorage.getItem('trashflow_mock_devices') || '[]');
+    const randomHex = Math.random().toString(16).substring(2, 10) + Math.random().toString(16).substring(2, 10);
+    const token = `trashflow_esp32_${randomHex}`;
+    const newId = devList.length > 0 ? Math.max(...devList.map(d => d.id)) + 1 : 1;
+    const newDev = {
+      id: newId,
+      nombre: nombre,
+      token_device: token,
+      token_preview: '...' + token.slice(-8),
+      operador_id: null,
+      operador_nombre: null,
+      operador_apellido: null,
+      activo: 1,
+      ultima_conexion: null,
+      creado_en: new Date().toISOString().replace('T', ' ').substring(0, 19)
+    };
+    devList.push(newDev);
+    localStorage.setItem('trashflow_mock_devices', JSON.stringify(devList));
+    return {
+      ok: true,
+      id: newId,
+      nombre: nombre,
+      token_device: token,
+      mensaje: `Dispositivo #${newId} creado con éxito.`
+    };
+  }
+
+  // 14. Simulación de PATCH /api/hardware/dispositivos/:id/asignar
+  const devAsignarMatch = path.match(/^\/api\/hardware\/dispositivos\/(\d+)\/asignar$/);
+  if (devAsignarMatch && options.method === 'PATCH') {
+    const devId = parseInt(devAsignarMatch[1]);
+    const { operador_id } = JSON.parse(options.body || '{}');
+    const devList = JSON.parse(localStorage.getItem('trashflow_mock_devices') || '[]');
+    const dev = devList.find(d => d.id === devId);
+    if (!dev) throw new Error("Dispositivo no encontrado");
+    
+    if (operador_id) {
+      const ops = [
+        { id: 4, nombre: 'Carlos', apellido: 'Gómez' },
+        { id: 5, nombre: 'Juan', apellido: 'Pérez' },
+        { id: 6, nombre: 'Sofía', apellido: 'Rodríguez' },
+        { id: 7, nombre: 'Ana', apellido: 'Martínez' }
+      ];
+      const op = ops.find(o => o.id === parseInt(operador_id));
+      dev.operador_id = op ? op.id : operador_id;
+      dev.operador_nombre = op ? op.nombre : 'Operador';
+      dev.operador_apellido = op ? op.apellido : '';
+    } else {
+      dev.operador_id = null;
+      dev.operador_nombre = null;
+      dev.operador_apellido = null;
+    }
+    localStorage.setItem('trashflow_mock_devices', JSON.stringify(devList));
+    return { ok: true, mensaje: "Dispositivo actualizado correctamente." };
+  }
+
+  // 15. Simulación de DELETE /api/hardware/dispositivos/:id
+  const devDeleteMatch = path.match(/^\/api\/hardware\/dispositivos\/(\d+)$/);
+  if (devDeleteMatch && options.method === 'DELETE') {
+    const devId = parseInt(devDeleteMatch[1]);
+    let devList = JSON.parse(localStorage.getItem('trashflow_mock_devices') || '[]');
+    devList = devList.filter(d => d.id !== devId);
+    localStorage.setItem('trashflow_mock_devices', JSON.stringify(devList));
+    return { ok: true, mensaje: "Dispositivo eliminado con éxito." };
+  }
+
+  // 16. Simulación de GET /api/estadisticas/reportes
+  if (path === '/api/estadisticas/reportes') {
+    const total = mockAlerts.length;
+    const resueltas = mockAlerts.filter(a => a.estado === 'resuelta').length;
+    const pendientes = mockAlerts.filter(a => a.estado === 'pendiente').length;
+    const alertadas = mockAlerts.filter(a => a.estado === 'alertada' || a.estado === 'en_proceso' || a.estado === 'asignada').length;
+    const descartadas = mockAlerts.filter(a => a.estado === 'descartada').length;
+    const efectividad = Math.round((resueltas / total) * 100);
+
+    return {
+      kpis: {
+        total_alertas: total,
+        resueltas: resueltas,
+        pendientes: pendientes,
+        en_proceso: alertadas,
+        descartadas: descartadas,
+        efectividad_pct: efectividad,
+        tiempo_promedio_min: 24.5
+      },
+      tendencia_diaria: [
+        { fecha: '2026-06-12', total: 4, resueltas: 4 },
+        { fecha: '2026-06-13', total: 6, resueltas: 5 },
+        { fecha: '2026-06-14', total: 5, resueltas: 4 },
+        { fecha: '2026-06-15', total: 7, resueltas: 6 },
+        { fecha: '2026-06-16', total: 8, resueltas: 6 },
+        { fecha: '2026-06-17', total: 9, resueltas: 7 },
+        { fecha: '2026-06-18', total: 11, resueltas: 9 }
+      ],
+      distribucion_zonas: [
+        { zona: 'Centro', total: 9, color: '#EF4444' },
+        { zona: 'Olivos', total: 7, color: '#F5A623' },
+        { zona: 'La Lucila', total: 6, color: '#4A90D9' },
+        { zona: 'Munro', total: 5, color: '#2ECC71' },
+        { zona: 'Villa Martelli', total: 4, color: '#8B5CF6' },
+        { zona: 'Florida', total: 3, color: '#EC4899' },
+        { zona: 'Carapachay', total: 3, color: '#14B8A6' }
+      ],
+      distribucion_estados: [
+        { estado: 'Resueltas', total: resueltas, color: '#3D5843' },
+        { estado: 'Alertadas', total: alertadas, color: '#F5A623' },
+        { estado: 'Pendientes', total: pendientes, color: '#E5484D' },
+        { estado: 'Descartadas', total: descartadas, color: '#7A857F' }
+      ],
+      rendimiento_operadores: [
+        { id: 7, nombre: 'Ana Martínez', zona: 'La Lucila', asignadas: 14, resueltas: 13, efectividad: 92.8, tiempo_promedio_min: 19.2 },
+        { id: 4, nombre: 'Carlos Gómez', zona: 'Centro', asignadas: 12, resueltas: 11, efectividad: 91.6, tiempo_promedio_min: 22.0 },
+        { id: 5, nombre: 'Juan Pérez', zona: 'Olivos', asignadas: 10, resueltas: 9, efectividad: 90.0, tiempo_promedio_min: 26.4 },
+        { id: 6, nombre: 'Sofía Rodríguez', zona: 'Munro', asignadas: 9, resueltas: 8, efectividad: 88.8, tiempo_promedio_min: 28.1 }
+      ],
+      registros: mockAlerts.map(a => ({
+        id: a.id,
+        direccion: a.direccion,
+        zona: a.zona,
+        estado: (a.estado === 'alertada' || a.estado === 'en_proceso' || a.estado === 'asignada') ? 'Alertada' : (a.estado.charAt(0).toUpperCase() + a.estado.slice(1)),
+        operador: a.operador || 'Sin asignar',
+        detectado_en: a.fecha ? a.fecha.replace('T', ' ') : '',
+        resuelto_en: a.estado === 'resuelta' ? a.fecha.replace('T', ' ') : '-'
+      }))
+    };
+  }
+
+  // 17. Simulación de GET /api/camaras
+  if (path === '/api/camaras' && (!options.method || options.method === 'GET')) {
+    return [
+      {
+        id: 1,
+        nombre: 'Cámara #1 — Munro',
+        ubicacion: 'Av. Mitre y Vélez Sarsfield, Munro',
+        latitud: -34.5312,
+        longitud: -58.5214,
+        estado: 'online',
+        activa: 1,
+        zona_id: 4,
+        total_detecciones: 38,
+        ultima_conexion: new Date(Date.now() - 25000).toISOString().replace('T', ' ').substring(0, 19),
+        ultima_alerta: new Date(Date.now() - 11 * 60 * 1000).toISOString().replace('T', ' ').substring(0, 19)
+      },
+      {
+        id: 2,
+        nombre: 'Cámara #2 — Olivos',
+        ubicacion: 'Av. del Libertador y Corrientes, Olivos',
+        latitud: -34.5125,
+        longitud: -58.4851,
+        estado: 'online',
+        activa: 1,
+        zona_id: 2,
+        total_detecciones: 54,
+        ultima_conexion: new Date(Date.now() - 40000).toISOString().replace('T', ' ').substring(0, 19),
+        ultima_alerta: new Date(Date.now() - 26 * 60 * 1000).toISOString().replace('T', ' ').substring(0, 19)
+      },
+      {
+        id: 3,
+        nombre: 'Cámara #3 — Vicente López Centro',
+        ubicacion: 'Av. Maipú y Ricardo Gutiérrez, Centro',
+        latitud: -34.5221,
+        longitud: -58.4723,
+        estado: 'online',
+        activa: 1,
+        zona_id: 1,
+        total_detecciones: 61,
+        ultima_conexion: new Date(Date.now() - 15000).toISOString().replace('T', ' ').substring(0, 19),
+        ultima_alerta: new Date(Date.now() - 75 * 60 * 1000).toISOString().replace('T', ' ').substring(0, 19)
+      },
+      {
+        id: 4,
+        nombre: 'Cámara #4 — Florida',
+        ubicacion: 'Av. San Martín y Gral. Roca, Florida',
+        latitud: -34.5367,
+        longitud: -58.4905,
+        estado: 'online',
+        activa: 1,
+        zona_id: 6,
+        total_detecciones: 29,
+        ultima_conexion: new Date(Date.now() - 50000).toISOString().replace('T', ' ').substring(0, 19),
+        ultima_alerta: null
+      },
+      {
+        id: 5,
+        nombre: 'Cámara #5 — Villa Martelli',
+        ubicacion: 'Laprida y Av. de los Constituyentes, Villa Martelli',
+        latitud: -34.5489,
+        longitud: -58.5082,
+        estado: 'mantenimiento',
+        activa: 1,
+        zona_id: 5,
+        total_detecciones: 17,
+        ultima_conexion: new Date(Date.now() - 3600000).toISOString().replace('T', ' ').substring(0, 19),
+        ultima_alerta: null
+      }
+    ];
+  }
+
   throw new Error(`Mock endpoint no implementado: ${options.method || 'GET'} ${path}`);
 }
+

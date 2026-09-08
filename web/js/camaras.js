@@ -41,8 +41,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// loadCameras — Carga y renderiza las tarjetas de cámara
+// loadCameras — Carga y renderiza las tarjetas de cámara con Cooldown de 30 min
 // ─────────────────────────────────────────────────────────────────────────────
+
+const COOLDOWN_DURATION_MS = 30 * 60 * 1000; // 30 minutos
 
 async function loadCameras() {
   const container = document.getElementById('camaras-container');
@@ -70,22 +72,39 @@ async function loadCameras() {
 
     data.forEach(camara => {
       const card = document.createElement('div');
-      card.className = 'card camera-card';
+      
+      // ── Comprobación de Cooldown (30 min tras última alerta) ──
+      let isCooldown = false;
+      let cooldownEndTime = 0;
 
-      // ── Estado: usar el campo estado de la DB + umbral de 90s para heartbeat ──
+      if (camara.ultima_alerta) {
+        const alertTime = new Date(camara.ultima_alerta.replace(/-/g, '/')).getTime();
+        const diffMs = Date.now() - alertTime;
+        if (diffMs >= 0 && diffMs < COOLDOWN_DURATION_MS) {
+          isCooldown = true;
+          cooldownEndTime = alertTime + COOLDOWN_DURATION_MS;
+        }
+      }
+
+      card.className = `card camera-card ${isCooldown ? 'is-cooldown' : ''}`;
+
+      // ── Estado: usar el campo estado de la DB + cooldown + umbral de 90s ──
       let badgeClass = 'badge-offline';
-      let badgeText  = 'Desconectado';
+      let badgeHtml  = 'Desconectado';
 
       if (camara.estado === 'mantenimiento') {
         badgeClass = 'badge-mantenimiento';
-        badgeText  = 'Mantenimiento';
+        badgeHtml  = 'Mantenimiento';
+      } else if (isCooldown) {
+        badgeClass = 'badge-cooldown';
+        badgeHtml  = '<span class="cooldown-dot"></span>Pausada (30m)';
       } else if (camara.estado === 'online' && camara.ultima_conexion) {
         // Umbral: 90 segundos (3 ciclos de heartbeat de 30s)
         const lastConn   = new Date(camara.ultima_conexion.replace(/-/g, '/'));
         const diffSecs   = (new Date() - lastConn) / 1000;
         if (diffSecs <= 90) {
           badgeClass = 'badge-online';
-          badgeText  = 'En Línea';
+          badgeHtml  = 'En Línea';
         }
       }
 
@@ -93,11 +112,30 @@ async function loadCameras() {
         ? formatDateTime(camara.ultima_conexion)
         : 'Nunca conectado';
 
+      const cooldownBoxHtml = isCooldown ? `
+        <div class="camera-cooldown-box" id="cooldown-box-${camara.id}">
+          <div class="cooldown-box-header">
+            <span>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              Pausa anti-sobrecarga (30m)
+            </span>
+            <span style="font-size: 10.5px; opacity: 0.85;">Alerta reciente</span>
+          </div>
+          <div class="cooldown-box-timer">
+            <span class="cooldown-label">Reactivación en:</span>
+            <span class="cooldown-digits cooldown-countdown" data-camara-id="${camara.id}" data-target-time="${cooldownEndTime}">--:--</span>
+          </div>
+        </div>
+      ` : '';
+
       card.innerHTML = `
         <div class="camera-card-header">
           <div class="camera-title-group">
             <h3 class="camera-card-title">
-              <span style="font-size:12px; font-weight:500; color:var(--color-text-secondary); margin-right:6px; font-family:monospace;">#${camara.id}</span>${escapeHTML(camara.nombre)}
+              Cámara #${camara.id}
             </h3>
             <div class="camera-card-location">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -107,7 +145,7 @@ async function loadCameras() {
               <span>${escapeHTML(camara.ubicacion)}</span>
             </div>
           </div>
-          <span class="badge ${badgeClass}">${badgeText}</span>
+          <span class="badge ${badgeClass}">${badgeHtml}</span>
         </div>
 
         <div class="camera-stats">
@@ -120,6 +158,8 @@ async function loadCameras() {
             <span class="stat-value" title="${camara.ultima_conexion || ''}">${ultimaConexion}</span>
           </div>
         </div>
+
+        ${cooldownBoxHtml}
 
         <div class="camera-card-actions" style="margin-top: 15px; display: flex; gap: 8px; justify-content: flex-end;">
           <a href="alertas.html?camara_id=${camara.id}"
@@ -138,7 +178,7 @@ async function loadCameras() {
           </button>
           <button class="btn"
                   style="padding: 8px 12px; background: transparent; border: 1px solid var(--color-danger); color: var(--color-danger);"
-                  onclick="confirmDeleteCamera(${camara.id}, '${escapeHTML(camara.nombre)}')"
+                  onclick="confirmDeleteCamera(${camara.id})"
                   title="Desactivar cámara">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/>
@@ -150,6 +190,9 @@ async function loadCameras() {
 
       container.appendChild(card);
     });
+
+    // Inicia el temporizador de actualización cada 1s
+    initCooldownTicker();
 
   } catch (error) {
     console.error('Error al cargar cámaras:', error);
@@ -168,6 +211,54 @@ async function loadCameras() {
       </div>
     `;
   }
+}
+
+/**
+ * Temporizador en tiempo real (1s) para los contadores de enfriamiento
+ */
+function initCooldownTicker() {
+  if (window._cooldownInterval) {
+    clearInterval(window._cooldownInterval);
+  }
+
+  function updateTimers() {
+    const countdownEls = document.querySelectorAll('.cooldown-countdown');
+    const now = Date.now();
+
+    countdownEls.forEach(el => {
+      const targetTime = parseInt(el.getAttribute('data-target-time'), 10);
+      if (!targetTime) return;
+
+      const remainingMs = targetTime - now;
+      if (remainingMs > 0) {
+        const totalSeconds = Math.ceil(remainingMs / 1000);
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        el.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')} restante`;
+      } else {
+        // Enfriamiento concluido: Reactivación en vivo
+        el.textContent = '00:00 - Reactivada';
+        const camId = el.getAttribute('data-camara-id');
+        const box = document.getElementById(`cooldown-box-${camId}`);
+        if (box) {
+          box.style.opacity = '0';
+          setTimeout(() => box.remove(), 400);
+        }
+        const card = el.closest('.camera-card');
+        if (card) {
+          card.classList.remove('is-cooldown');
+          const badge = card.querySelector('.badge-cooldown');
+          if (badge) {
+            badge.className = 'badge badge-online';
+            badge.innerHTML = 'En Línea';
+          }
+        }
+      }
+    });
+  }
+
+  updateTimers();
+  window._cooldownInterval = setInterval(updateTimers, 1000);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -219,18 +310,14 @@ function initCameraModals() {
       e.preventDefault();
       if (errorCrear) errorCrear.style.display = 'none';
 
-      const nombre    = document.getElementById('cam-nombre').value.trim();
       const ubicacion = document.getElementById('cam-ubicacion').value.trim();
       const latitud   = parseFloat(document.getElementById('cam-lat').value);
       const longitud  = parseFloat(document.getElementById('cam-lng').value);
       const zonaId    = document.getElementById('cam-zona').value;
       const desc      = document.getElementById('cam-descripcion').value.trim();
 
-      if (!nombre || !ubicacion || isNaN(latitud) || isNaN(longitud)) {
-        if (errorCrear) {
-          errorCrear.textContent = '⚠️ Completá nombre y ubicación, y usá el botón Localizar para confirmar las coordenadas.';
-          errorCrear.style.display = 'block';
-        }
+      if (!ubicacion || isNaN(latitud) || isNaN(longitud) || !zonaId || !desc) {
+        showToast('Completá zona, dirección y descripción. Usá el botón Localizar para confirmar las coordenadas.', 'warning');
         return;
       }
 
@@ -243,12 +330,11 @@ function initCameraModals() {
         const res = await requestAPI('/api/camaras', {
           method: 'POST',
           body: JSON.stringify({
-            nombre,
             ubicacion,
             latitud,
             longitud,
-            descripcion: desc || null,
-            zona_id:     zonaId ? parseInt(zonaId) : null
+            descripcion: desc,
+            zona_id:     parseInt(zonaId)
           })
         });
 
@@ -261,10 +347,7 @@ function initCameraModals() {
         loadCameras();
       } catch (err) {
         console.error(err);
-        if (errorCrear) {
-          errorCrear.textContent = `⚠️ ${err.message || 'Error al crear la cámara'}`;
-          errorCrear.style.display = 'block';
-        }
+        showToast(err.message || 'Error al crear la cámara.', 'error');
       } finally {
         btn.disabled = false;
         btn.textContent = orig;
@@ -309,15 +392,14 @@ function initCameraModals() {
       e.preventDefault();
       if (errorEditar) errorEditar.style.display = 'none';
 
-      const id         = document.getElementById('edit-cam-id').value;
-      const nombre     = document.getElementById('edit-cam-nombre').value.trim();
-      const ubicacion  = document.getElementById('edit-cam-ubicacion').value.trim();
-      const latStr     = document.getElementById('edit-cam-lat').value;
-      const lngStr     = document.getElementById('edit-cam-lng').value;
-      const zonaId     = document.getElementById('edit-cam-zona').value;
-      const desc       = document.getElementById('edit-cam-descripcion').value.trim();
+      const id        = document.getElementById('edit-cam-id').value;
+      const ubicacion = document.getElementById('edit-cam-ubicacion').value.trim();
+      const latStr    = document.getElementById('edit-cam-lat').value;
+      const lngStr    = document.getElementById('edit-cam-lng').value;
+      const zonaId    = document.getElementById('edit-cam-zona').value;
+      const desc      = document.getElementById('edit-cam-descripcion').value.trim();
 
-      const body = { nombre, ubicacion };
+      const body = { ubicacion };
       if (desc)      body.descripcion = desc;
       if (zonaId)    body.zona_id     = parseInt(zonaId);
       if (latStr)    body.latitud     = parseFloat(latStr);
@@ -337,10 +419,7 @@ function initCameraModals() {
         loadCameras();
       } catch (err) {
         console.error(err);
-        if (errorEditar) {
-          errorEditar.textContent = `⚠️ ${err.message || 'Error al actualizar la cámara'}`;
-          errorEditar.style.display = 'block';
-        }
+        showToast(err.message || 'Error al actualizar la cámara.', 'error');
       } finally {
         btn.disabled = false;
         btn.textContent = orig;
@@ -364,7 +443,6 @@ async function openEditCameraModal(id) {
     const cam = await requestAPI(`/api/camaras/${id}`);
 
     document.getElementById('edit-cam-id').value          = cam.id;
-    document.getElementById('edit-cam-nombre').value      = cam.nombre || '';
     document.getElementById('edit-cam-ubicacion').value   = cam.ubicacion || '';
     document.getElementById('edit-cam-descripcion').value = cam.descripcion || '';
     document.getElementById('edit-cam-zona').value        = cam.zona_id || '';
@@ -380,7 +458,7 @@ async function openEditCameraModal(id) {
     modal.classList.add('active');
   } catch (err) {
     console.error('Error al cargar datos de cámara:', err);
-    alert(`No se pudieron cargar los datos de la cámara: ${err.message}`);
+    showToast(`No se pudieron cargar los datos: ${err.message}`, 'error');
   }
 }
 
@@ -388,17 +466,17 @@ async function openEditCameraModal(id) {
 // confirmDeleteCamera — Desactiva una cámara con confirmación
 // ─────────────────────────────────────────────────────────────────────────────
 
-async function confirmDeleteCamera(id, nombre) {
-  const ok = confirm(`¿Desactivar la cámara "${nombre}"? Conservará su historial de alertas.`);
+async function confirmDeleteCamera(id) {
+  const ok = confirm(`¿Desactivar la Cámara #${id}? Conservará su historial de alertas.`);
   if (!ok) return;
 
   try {
     const res = await requestAPI(`/api/camaras/${id}`, { method: 'DELETE' });
-    alert(res.mensaje || 'Cámara desactivada.');
+    showToast(res.mensaje || 'Cámara desactivada correctamente.', 'success');
     loadCameras();
   } catch (err) {
     console.error(err);
-    alert(err.message || 'Error al desactivar la cámara.');
+    showToast(err.message || 'Error al desactivar la cámara.', 'error');
   }
 }
 
@@ -422,6 +500,100 @@ function formatDateTime(dateStr) {
   } catch (e) {
     return dateStr;
   }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// showToast — Muestra una notificación flotante con el estilo del sistema
+// type: 'error' | 'success' | 'warning' | 'info'
+// ─────────────────────────────────────────────────────────────────────────────
+
+function showToast(message, type = 'error') {
+  // Inyectar estilos la primera vez
+  if (!document.getElementById('tf-toast-styles')) {
+    const s = document.createElement('style');
+    s.id = 'tf-toast-styles';
+    s.textContent = `
+      #tf-toast-container {
+        position: fixed; top: 24px; right: 24px; z-index: 99999;
+        display: flex; flex-direction: column; gap: 10px;
+        max-width: 380px; pointer-events: none;
+      }
+      .tf-toast {
+        pointer-events: all;
+        display: flex; align-items: flex-start; gap: 12px;
+        padding: 14px 16px;
+        border-radius: 12px;
+        border: 1px solid var(--color-border, #2a2a3e);
+        background: var(--color-bg-card, #1a1a2e);
+        box-shadow: 0 8px 40px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.04);
+        animation: tfSlideIn .28s cubic-bezier(.22,1,.36,1) both;
+        backdrop-filter: blur(12px);
+      }
+      .tf-toast.removing {
+        animation: tfSlideOut .22s ease forwards;
+      }
+      .tf-toast-icon {
+        width: 24px; height: 24px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 12px; font-weight: 800; flex-shrink: 0; margin-top: 1px;
+      }
+      .tf-toast-msg {
+        flex: 1; font-size: 13px; line-height: 1.55;
+        color: var(--color-text-primary, #e2e8f0);
+        font-family: inherit;
+      }
+      .tf-toast-close {
+        background: none; border: none; cursor: pointer; padding: 0;
+        color: var(--color-text-muted, #64748b); font-size: 15px;
+        line-height: 1; flex-shrink: 0; transition: color .15s;
+      }
+      .tf-toast-close:hover { color: var(--color-text-primary, #e2e8f0); }
+      @keyframes tfSlideIn {
+        from { transform: translateX(110%); opacity: 0; }
+        to   { transform: translateX(0);    opacity: 1; }
+      }
+      @keyframes tfSlideOut {
+        from { transform: translateX(0);    opacity: 1; }
+        to   { transform: translateX(110%); opacity: 0; }
+      }
+    `;
+    document.head.appendChild(s);
+  }
+
+  // Crear o reusar el contenedor
+  let container = document.getElementById('tf-toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'tf-toast-container';
+    document.body.appendChild(container);
+  }
+
+  const palette = {
+    error:   { border: '#f87171', bg: 'rgba(248,113,113,.12)', text: '#f87171', icon: '✕' },
+    success: { border: '#4ade80', bg: 'rgba(74,222,128,.12)', text: '#4ade80', icon: '✓' },
+    warning: { border: '#fbbf24', bg: 'rgba(251,191,36,.12)',  text: '#fbbf24', icon: '⚠' },
+    info:    { border: '#38bdf8', bg: 'rgba(56,189,248,.12)',  text: '#38bdf8', icon: 'ℹ' }
+  };
+  const p = palette[type] || palette.error;
+
+  const toast = document.createElement('div');
+  toast.className = 'tf-toast';
+  toast.style.borderLeftColor = p.border;
+  toast.style.borderLeftWidth = '3px';
+  toast.innerHTML = `
+    <div class="tf-toast-icon" style="background:${p.bg};border:1.5px solid ${p.border};color:${p.text};">${p.icon}</div>
+    <div class="tf-toast-msg">${message}</div>
+    <button class="tf-toast-close" aria-label="Cerrar">×</button>
+  `;
+
+  const dismiss = () => {
+    toast.classList.add('removing');
+    setTimeout(() => toast.remove(), 230);
+  };
+  toast.querySelector('.tf-toast-close').addEventListener('click', dismiss);
+
+  container.appendChild(toast);
+  setTimeout(dismiss, 5500);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -468,9 +640,29 @@ function initGeocoder({ inputId, btnId, latHiddenId, lngHiddenId, previewId, map
     if (marker) { marker.setLatLng([lat, lng]); }
     else {
       marker = L.marker([lat, lng], { draggable: true }).addTo(leafletMap);
-      marker.on('dragend', () => {
+      marker.on('dragend', async () => {
         const pos = marker.getLatLng();
         updateHidden(pos.lat, pos.lng);
+
+        // Geocodificación inversa: actualizar dirección y zona al mover el pin
+        try {
+          const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.lat}&lon=${pos.lng}&addressdetails=1`;
+          const resp = await fetch(url, { headers: { 'Accept-Language': 'es' } });
+          const data = await resp.json();
+          if (data && data.address) {
+            const a = data.address;
+            const partes = [
+              a.road,
+              a.house_number,
+              a.suburb || a.neighbourhood || a.city_district,
+              a.city   || a.town          || a.municipality
+            ].filter(Boolean);
+            input.value = partes.join(', ') || data.display_name || input.value;
+            autoSetZona(data.address, zonaSelectId, zonaBadgeId);
+          }
+        } catch (e) {
+          console.warn('[TrashFlow] Reverse geocode error al arrastrar pin:', e);
+        }
       });
     }
 
@@ -494,33 +686,42 @@ function initGeocoder({ inputId, btnId, latHiddenId, lngHiddenId, previewId, map
       const results = await resp.json();
 
       if (!results || results.length === 0) {
-        alert('No se encontró la dirección. Intentá ser más específico (incluí ciudad y provincia).');
+        showToast('No se encontró la dirección. Intentá ser más específico (incluí ciudad y provincia).', 'warning');
         return;
       }
 
       const { lat, lon, address } = results[0];
       showMap(parseFloat(lat), parseFloat(lon));
 
-      // Autodetectar zona a partir del desglose de dirección de Nominatim
       if (address) {
         autoSetZona(address, zonaSelectId, zonaBadgeId);
       }
     } catch (e) {
       console.error('Error al geocodificar:', e);
-      alert('No se pudo obtener la ubicación. Verificá tu conexión a internet.');
+      showToast('No se pudo obtener la ubicación. Verificá tu conexión a internet.', 'error');
     } finally {
       btn.classList.remove('loading');
       btn.disabled = false;
     }
   });
 
-  // Reset: limpia el mapa cuando se resetea el formulario
+  // Reset: limpia el mapa y desbloquea el select de zona
   input.closest('form')?.addEventListener('reset', () => {
     preview.classList.add('hidden');
     document.getElementById(latHiddenId).value = '';
     document.getElementById(lngHiddenId).value = '';
     if (coords) coords.textContent = '';
     if (marker) { marker.remove(); marker = null; }
+    // Restaurar el select de zona a editable y vacío
+    const zonaSelect = document.getElementById(zonaSelectId);
+    if (zonaSelect) {
+      zonaSelect.value = '';
+      zonaSelect.style.pointerEvents = '';
+      zonaSelect.style.opacity = '';
+      zonaSelect.title = '';
+    }
+    const badge = badgeId ? document.getElementById(badgeId) : null;
+    if (badge) badge.textContent = '';
   });
 
   return {
@@ -535,18 +736,16 @@ function initGeocoder({ inputId, btnId, latHiddenId, lngHiddenId, previewId, map
 // ─────────────────────────────────────────────────────────────────────────────
 
 function autoSetZona(address, selectId, badgeId) {
-  // Tabla de mapeo: keywords (lowercase) → { id, nombre }
   const zonaMap = [
-    { id: '1', nombre: 'Centro',        keywords: ['centro', 'vicente lópez centro'] },
-    { id: '2', nombre: 'Olivos',        keywords: ['olivos'] },
-    { id: '3', nombre: 'La Lucila',     keywords: ['la lucila', 'lucila'] },
-    { id: '4', nombre: 'Munro',         keywords: ['munro'] },
-    { id: '5', nombre: 'Villa Martelli',keywords: ['villa martelli', 'martelli'] },
-    { id: '6', nombre: 'Florida',       keywords: ['florida'] },
-    { id: '7', nombre: 'Carapachay',    keywords: ['carapachay'] }
+    { id: '1', nombre: 'Centro',         keywords: ['centro', 'vicente lópez centro'] },
+    { id: '2', nombre: 'Olivos',         keywords: ['olivos'] },
+    { id: '3', nombre: 'La Lucila',      keywords: ['la lucila', 'lucila'] },
+    { id: '4', nombre: 'Munro',          keywords: ['munro'] },
+    { id: '5', nombre: 'Villa Martelli', keywords: ['villa martelli', 'martelli'] },
+    { id: '6', nombre: 'Florida',        keywords: ['florida'] },
+    { id: '7', nombre: 'Carapachay',     keywords: ['carapachay'] }
   ];
 
-  // Nominatim puede devolver la zona en distintos campos según cómo esté cargado OSM
   const candidatos = [
     address.suburb,
     address.neighbourhood,
@@ -564,10 +763,13 @@ function autoSetZona(address, selectId, badgeId) {
   for (const candidato of candidatos) {
     for (const zona of zonaMap) {
       if (zona.keywords.some(kw => candidato.includes(kw))) {
+        // ── Zona detectada: asignar y bloquear el select ──
         select.value = zona.id;
-        // Mostrar zona detectada en el badge visual
+        select.style.pointerEvents = 'none';
+        select.style.opacity = '0.75';
+        select.title = 'Zona detectada automáticamente según la dirección. Relocalizá para cambiarla.';
         if (badge) {
-          badge.textContent = `📍 Zona: ${zona.nombre}`;
+          badge.textContent = `✅ Zona detectada: ${zona.nombre}`;
           badge.style.color = 'var(--accent-teal)';
         }
         console.log(`[TrashFlow] Zona autodetectada: "${candidato}" → ${zona.nombre}`);
@@ -576,7 +778,14 @@ function autoSetZona(address, selectId, badgeId) {
     }
   }
 
-  // No se detectó zona: limpiar badge
-  if (badge) badge.textContent = '';
+  // ── Zona NO detectada: dejar el select libre para selección manual ──
+  select.value = '';
+  select.style.pointerEvents = '';
+  select.style.opacity = '';
+  select.title = '';
+  if (badge) {
+    badge.textContent = '⚠️ Zona no detectada — seleccioná manualmente';
+    badge.style.color = 'var(--color-warning, orange)';
+  }
   console.log('[TrashFlow] Zona no detectada automáticamente. Campos recibidos:', candidatos);
 }

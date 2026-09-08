@@ -44,7 +44,7 @@ app.config['JWT_SECRET_KEY'] = JWT_SECRET_KEY
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Habilitar CORS para permitir solicitudes del panel web y aplicaciones PWA locales
-CORS(app, origins=["http://localhost", "http://127.0.0.1"])
+CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 
 # Inicializar el gestor de tokens JWT (JSON Web Tokens)
 jwt = JWTManager(app)
@@ -133,5 +133,6 @@ def internal_error(e):
 
 # Arranque del servidor de desarrollo local
 if __name__ == "__main__":
-    # Corre por defecto en el puerto 5000 con recarga automática activada (debug=True)
-    app.run(debug=True, port=5000)
+    # Corre por defecto en el puerto 5005 con recarga automática activada (debug=True)
+    app.run(debug=True, host='0.0.0.0', port=5005)
+

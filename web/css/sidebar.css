@@ -50,18 +50,22 @@
 }
 
 .sidebar-logo-full {
-  width: 145px;
-  height: auto;
-  display: block;
+  width: 165px !important;
+  max-width: 175px !important;
+  max-height: 50px !important;
+  height: auto !important;
+  object-fit: contain !important;
+  display: block !important;
+  flex-shrink: 0 !important;
+  filter: brightness(0) saturate(100%) invert(65%) sepia(21%) saturate(958%) hue-rotate(134deg) brightness(93%) contrast(90%);
 }
 
 .sidebar-logo-icon {
   display: none;
-  width: 32px;
-  height: auto;
-}
-
-.sidebar-logo-full, .sidebar-logo-icon {
+  width: 36px !important;
+  height: 36px !important;
+  object-fit: contain !important;
+  flex-shrink: 0 !important;
   filter: brightness(0) saturate(100%) invert(65%) sepia(21%) saturate(958%) hue-rotate(134deg) brightness(93%) contrast(90%);
 }
 

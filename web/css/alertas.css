@@ -16,14 +16,17 @@
 }
 
 .date-input {
-  /* Fix native date picker dark color styling for edge cases */
-  color-scheme: dark;
+  color-scheme: dark light;
+}
+
+body.theme-light .date-input {
+  color-scheme: light;
 }
 
 .filter-submit-btn {
   height: 40px;
   background-color: var(--color-accent-teal);
-  color: var(--color-bg);
+  color: var(--btn-primary-text, #121815);
   font-weight: 700;
   padding: 0 20px;
 }
@@ -148,9 +151,9 @@
 
 .pagination-number-btn.active {
   background-color: var(--color-accent-teal);
-  color: var(--color-bg);
+  color: var(--btn-primary-text, #121815);
   border-color: var(--color-accent-teal);
-  box-shadow: 0 0 8px rgba(107, 143, 138, 0.25);
+  box-shadow: 0 0 8px rgba(96, 183, 186, 0.25);
 }
 
 .pagination-btn {
@@ -223,12 +226,7 @@
     padding: var(--spacing-sm) var(--spacing-md);
   }
 
-  .confidence-wrapper {
-    min-width: 90px;
-  }
-
   /* Hide less important columns on small screens */
-  .col-confianza,
   .col-foto {
     display: none;
   }

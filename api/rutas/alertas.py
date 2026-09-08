@@ -337,17 +337,21 @@ def get_alerts():
         params.append(zona)
         
     if estado and estado != 'Todos los Estados':
-        state_map = {
-            "pendiente": "pendiente",
-            "asignada": "asignada",
-            "en proceso": "en_proceso",
-            "en_proceso": "en_proceso",
-            "resuelta": "resuelta",
-            "descartada": "descartada"
-        }
-        db_estado = state_map.get(estado.lower(), estado.lower())
-        where_clauses.append("estado = %s")
-        params.append(db_estado)
+        if estado.lower() in ('alertada', 'alertadas'):
+            where_clauses.append("estado_id IN (2, 3)")
+        else:
+            state_map = {
+                "pendiente": "pendiente",
+                "asignada": "asignada",
+                "en proceso": "en_proceso",
+                "en_proceso": "en_proceso",
+                "alertada": "en_proceso",
+                "resuelta": "resuelta",
+                "descartada": "descartada"
+            }
+            db_estado = state_map.get(estado.lower(), estado.lower())
+            where_clauses.append("estado = %s")
+            params.append(db_estado)
         
     if fecha:
         where_clauses.append("DATE(detectado_en) = %s")

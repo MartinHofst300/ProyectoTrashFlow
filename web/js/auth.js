@@ -16,6 +16,7 @@
 
 // Se ejecuta automáticamente al cargar el DOM de cualquier página HTML
 document.addEventListener('DOMContentLoaded', () => {
+  applySavedSettings();   // Aplica preferencias de accesibilidad y diseño (fuente, densidad, color)
   initSidebar();          // Renderiza el menú lateral común
   initTopbar();           // Renderiza el encabezado común
   checkAuthGuard();       // Verifica si el usuario tiene permiso para ver la página actual
@@ -431,6 +432,37 @@ function initSidebar() {
         </svg>
         <span class="nav-text">Operadores</span>
       </a>
+      <a href="hardware.html" class="sidebar-nav-link ${page === 'hardware.html' ? 'active' : ''}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+          <rect x="9" y="9" width="6" height="6"></rect>
+          <line x1="9" y1="1" x2="9" y2="4"></line>
+          <line x1="15" y1="1" x2="15" y2="4"></line>
+          <line x1="9" y1="20" x2="9" y2="23"></line>
+          <line x1="15" y1="20" x2="15" y2="23"></line>
+          <line x1="20" y1="9" x2="23" y2="9"></line>
+          <line x1="20" y1="15" x2="23" y2="15"></line>
+          <line x1="1" y1="9" x2="4" y2="9"></line>
+          <line x1="1" y1="15" x2="4" y2="15"></line>
+        </svg>
+        <span class="nav-text">Dispositivos</span>
+      </a>
+      <a href="reportes.html" class="sidebar-nav-link ${page === 'reportes.html' ? 'active' : ''}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="20" x2="18" y2="10"></line>
+          <line x1="12" y1="20" x2="12" y2="4"></line>
+          <line x1="6" y1="20" x2="6" y2="14"></line>
+          <line x1="2" y1="20" x2="22" y2="20"></line>
+        </svg>
+        <span class="nav-text">Reportes</span>
+      </a>
+      <a href="configuracion.html" class="sidebar-nav-link ${page === 'configuracion.html' ? 'active' : ''}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+        <span class="nav-text">Configuración</span>
+      </a>
     </nav>
     
     <div class="sidebar-footer">
@@ -484,12 +516,23 @@ function initTopbar() {
   } else if (page === 'operadores.html') {
     title = 'Operadores de Campo';
     shortName = 'Operadores';
+  } else if (page === 'hardware.html') {
+    title = 'Dispositivos de Campo';
+    shortName = 'Dispositivos';
+  } else if (page === 'reportes.html') {
+    title = 'Reportes y Métricas';
+    shortName = 'Reportes';
+  } else if (page === 'configuracion.html') {
+    title = 'Configuración del Sistema';
+    shortName = 'Configuración';
   }
+
+  const muniName = localStorage.getItem('trashflow_municipality_name') || 'Vicente López';
 
   topbarLeft.innerHTML = `
     <h1 class="topbar-title">${title}</h1>
     <div class="topbar-subtitle">
-      <span>📍 ${shortName} — Vicente López</span>
+      <span>📍 ${shortName} — ${muniName}</span>
     </div>
   `;
 }
@@ -609,4 +652,90 @@ function initCustomSelects() {
     });
   });
 }
+
+/**
+ * Carga y aplica las preferencias de apariencia guardadas en localStorage
+ * (tamaño de fuente, densidad visual, color de acento, bordes y modos de tema).
+ */
+function applySavedSettings() {
+  try {
+    const raw = localStorage.getItem('trashflow_settings');
+    if (!raw) return;
+    const s = JSON.parse(raw);
+    const root = document.documentElement;
+
+    // 1. Tamaño de fuente base (Clases de escalado global en body)
+    document.body.classList.remove('font-size-12', 'font-size-14', 'font-size-16', 'font-size-18');
+    const fSize = s.fontSize || 14;
+    document.body.classList.add(`font-size-${fSize}`);
+    root.style.setProperty('--font-size-base', `${fSize}px`);
+
+    // 2. Modo de Tema Visual (Dark, OLED, Light)
+    document.body.classList.remove('theme-oled', 'theme-light');
+    if (s.themeMode === 'oled') {
+      document.body.classList.add('theme-oled');
+    } else if (s.themeMode === 'light') {
+      document.body.classList.add('theme-light');
+    }
+
+    // 3. Estilo de Bordes (Round, Standard, Straight)
+    if (s.borderRadius === 'round') {
+      root.style.setProperty('--radius-card', '16px');
+      root.style.setProperty('--radius-button', '10px');
+      root.style.setProperty('--radius-input', '10px');
+    } else if (s.borderRadius === 'straight') {
+      root.style.setProperty('--radius-card', '4px');
+      root.style.setProperty('--radius-button', '4px');
+      root.style.setProperty('--radius-input', '4px');
+    } else {
+      root.style.setProperty('--radius-card', '12px');
+      root.style.setProperty('--radius-button', '8px');
+      root.style.setProperty('--radius-input', '8px');
+    }
+
+    // 4. Densidad de espaciado
+    document.body.classList.remove('density-compact', 'density-comfortable');
+    if (s.density === 'compact') {
+      document.body.classList.add('density-compact');
+      root.style.setProperty('--spacing-density', '0.75');
+    } else if (s.density === 'comfortable') {
+      document.body.classList.add('density-comfortable');
+      root.style.setProperty('--spacing-density', '1.25');
+    } else {
+      root.style.setProperty('--spacing-density', '1');
+    }
+
+    // 5. Color de acento con contraste inteligente
+    if (s.accentColor) {
+      root.style.setProperty('--accent-teal', s.accentColor);
+      root.style.setProperty('--color-accent-teal', s.accentColor);
+
+      // Calcular contraste para botones principales
+      try {
+        let hex = s.accentColor;
+        if (hex.startsWith('#') && hex.length === 7) {
+          const r = parseInt(hex.slice(1, 3), 16);
+          const g = parseInt(hex.slice(3, 5), 16);
+          const b = parseInt(hex.slice(5, 7), 16);
+          const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+          const textContrast = (yiq >= 140) ? '#121815' : '#FFFFFF';
+          root.style.setProperty('--btn-primary-text', textContrast);
+        }
+      } catch (err) {
+        root.style.setProperty('--btn-primary-text', '#121815');
+      }
+    }
+
+    // 6. Alto contraste
+    if (s.highContrast === true) {
+      document.body.classList.add('high-contrast-mode');
+    } else {
+      document.body.classList.remove('high-contrast-mode');
+    }
+  } catch (e) {
+    console.warn('Error aplicando configuraciones guardadas:', e);
+  }
+}
+
+
 

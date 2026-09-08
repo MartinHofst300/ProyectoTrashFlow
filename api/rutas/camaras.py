@@ -54,8 +54,10 @@ def get_camaras():
             SELECT c.id, c.nombre, c.descripcion, c.ubicacion, c.latitud, c.longitud,
                    c.ip_stream, c.token_api, c.estado, c.ultima_conexion,
                    (SELECT COUNT(*) FROM alertas a WHERE a.camara_id = c.id) AS total_detecciones,
+                   (SELECT MAX(detectado_en) FROM alertas a WHERE a.camara_id = c.id) AS ultima_alerta,
                    c.activa, c.zona_id
             FROM camaras c
+            WHERE c.activa = 1
             ORDER BY c.id
             """
         )
@@ -65,6 +67,8 @@ def get_camaras():
             if c['longitud'] is not None: c['longitud'] = float(c['longitud'])
             if c['ultima_conexion'] is not None:
                 c['ultima_conexion'] = c['ultima_conexion'].strftime('%Y-%m-%d %H:%M:%S')
+            if c.get('ultima_alerta') is not None:
+                c['ultima_alerta'] = c['ultima_alerta'].strftime('%Y-%m-%d %H:%M:%S')
 
         return jsonify(camaras), 200
     except Exception as e:
@@ -94,6 +98,7 @@ def get_camara_detail(camara_id):
             SELECT c.id, c.nombre, c.descripcion, c.ubicacion, c.latitud, c.longitud,
                    c.ip_stream, c.token_api, c.estado, c.ultima_conexion,
                    (SELECT COUNT(*) FROM alertas a WHERE a.camara_id = c.id) AS total_detecciones,
+                   (SELECT MAX(detectado_en) FROM alertas a WHERE a.camara_id = c.id) AS ultima_alerta,
                    c.activa, c.zona_id
             FROM camaras c
             WHERE c.id = %s
@@ -109,6 +114,8 @@ def get_camara_detail(camara_id):
         if c['longitud'] is not None: c['longitud'] = float(c['longitud'])
         if c['ultima_conexion'] is not None:
             c['ultima_conexion'] = c['ultima_conexion'].strftime('%Y-%m-%d %H:%M:%S')
+        if c.get('ultima_alerta') is not None:
+            c['ultima_alerta'] = c['ultima_alerta'].strftime('%Y-%m-%d %H:%M:%S')
 
         return jsonify(c), 200
     except Exception as e:
@@ -139,18 +146,25 @@ def create_camara():
         return jsonify({"error": "No autorizado", "mensaje": "Se requieren privilegios de administrador"}), 403
 
     data = request.get_json() or {}
-    nombre    = data.get("nombre")
-    ubicacion = data.get("ubicacion")
-    latitud   = data.get("latitud")
-    longitud  = data.get("longitud")
-
-    if not all([nombre, ubicacion, latitud is not None, longitud is not None]):
-        return jsonify({"error": "Campos incompletos",
-                        "mensaje": "nombre, ubicacion, latitud y longitud son obligatorios"}), 400
-
-    descripcion = data.get("descripcion")
+    ubicacion   = data.get("ubicacion")
+    latitud     = data.get("latitud")
+    longitud    = data.get("longitud")
+    descripcion = (data.get("descripcion") or "").strip() or None
     zona_id     = data.get("zona_id")
-    ip_stream   = data.get("ip_stream")
+
+    if not all([ubicacion, latitud is not None, longitud is not None]):
+        return jsonify({"error": "Campos incompletos",
+                        "mensaje": "ubicacion, latitud y longitud son obligatorios"}), 400
+
+    if not descripcion:
+        return jsonify({"error": "Campo incompleto",
+                        "mensaje": "La descripción es obligatoria"}), 400
+
+    if zona_id is None:
+        return jsonify({"error": "Campo incompleto",
+                        "mensaje": "La zona es obligatoria"}), 400
+
+    ip_stream = data.get("ip_stream")
 
     if zona_id is not None:
         try:
@@ -162,6 +176,33 @@ def create_camara():
             return jsonify({"error": "Formato inválido", "mensaje": "zona_id debe ser un entero"}), 400
 
     try:
+        # ── Verificar que no exista ya una cámara en la misma dirección o coordenadas ──
+        duplicado_dir = query(
+            "SELECT id, nombre FROM camaras WHERE activa = 1 AND ubicacion = %s",
+            (ubicacion,)
+        )
+        if duplicado_dir:
+            return jsonify({
+                "error": "Dirección duplicada",
+                "mensaje": f"Ya existe la cámara \"{ duplicado_dir[0]['nombre'] }\" en esa dirección. No se pueden registrar dos cámaras en el mismo lugar."
+            }), 409
+
+        # También verificar por coordenadas (radio ~100 metros = 0.001 grados)
+        duplicado_coords = query(
+            """
+            SELECT id, nombre FROM camaras
+            WHERE activa = 1
+              AND ABS(latitud  - %s) < 0.001
+              AND ABS(longitud - %s) < 0.001
+            """,
+            (float(latitud), float(longitud))
+        )
+        if duplicado_coords:
+            return jsonify({
+                "error": "Ubicación duplicada",
+                "mensaje": f"Ya existe la cámara \"{ duplicado_coords[0]['nombre'] }\" muy cerca de esa ubicación (menos de 100 metros)."
+            }), 409
+
         # Generar token único para autenticar al detector Python
         token_api = secrets.token_hex(32)  # 64 chars hex — suficientemente seguro
 
@@ -172,9 +213,13 @@ def create_camara():
                ip_stream, token_api, estado, activa, creado_en)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'offline', 1, NOW())
             """,
-            (zona_id, nombre, descripcion, ubicacion,
+            (zona_id, f"Cámara #TMP", descripcion, ubicacion,
              float(latitud), float(longitud), ip_stream, token_api)
         )
+
+        # Actualizar el nombre automático con el ID asignado
+        query("UPDATE camaras SET nombre = %s WHERE id = %s",
+              (f"Cámara #{nuevo_id}", nuevo_id))
 
         return jsonify({
             "ok": True,
@@ -215,7 +260,7 @@ def update_camara(camara_id):
     set_clauses = []
     params = []
 
-    campos_texto = ['nombre', 'descripcion', 'ubicacion', 'ip_stream']
+    campos_texto = ['descripcion', 'ubicacion', 'ip_stream']
     for campo in campos_texto:
         if campo in data:
             set_clauses.append(f"{campo} = %s")

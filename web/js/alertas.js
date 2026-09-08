@@ -2,10 +2,8 @@
  * TrashFlow — Sistema de Monitoreo de Residuos Urbano
  * 
  * Archivo: alertas.js
- * Descripción: Controla la lógica de la página de administración de alertas de basura (alertas.html).
- *              Administra la búsqueda interactiva, los filtros combinados por zona, estado
- *              y fecha, la paginación de resultados, la visualización de la barra de confianza
- *              de la Inteligencia Artificial y la asignación manual de operadores de campo.
+ * Descripción: Controla la tabla de alertas de residuos, incluyendo los filtros dinámicos por zona, estado
+ *              y fecha, la paginación de resultados, la asignación de operarios y la visualización de evidencias.
  * 
  * Dependencias:
  *   - config.js (Usa requestAPI y BASE_URL)
@@ -147,7 +145,7 @@ async function loadAlertas() {
     if (!data.alertas || data.alertas.length === 0) {
       tableBody.innerHTML = `
         <tr>
-          <td colspan="8" class="text-center" style="padding: var(--spacing-xl); color: var(--color-text-secondary);">
+          <td colspan="7" class="text-center" style="padding: var(--spacing-xl); color: var(--color-text-secondary);">
             No se encontraron alertas con los filtros especificados.
           </td>
         </tr>
@@ -160,8 +158,9 @@ async function loadAlertas() {
     // Mapeo estético de los nombres de estados operativos
     const statesMap = {
       pendiente: { label: 'Pendiente', badgeClass: 'badge-pendiente' },
-      asignada: { label: 'Asignada', badgeClass: 'badge-asignada' },
-      en_proceso: { label: 'En Proceso', badgeClass: 'badge-en-proceso' },
+      asignada: { label: 'Alertada', badgeClass: 'badge-alertada' },
+      en_proceso: { label: 'Alertada', badgeClass: 'badge-alertada' },
+      alertada: { label: 'Alertada', badgeClass: 'badge-alertada' },
       resuelta: { label: 'Resuelta', badgeClass: 'badge-resuelta' },
       descartada: { label: 'Descartada', badgeClass: 'badge-descartada' }
     };
@@ -260,12 +259,6 @@ function renderTableSkeletons() {
         <div class="flex items-center gap: 8px;">
           <div class="skeleton skeleton-avatar"></div>
           <div class="skeleton" style="height: 12px; width: 70px;"></div>
-        </div>
-      </td>
-      <td>
-        <div class="flex items-center gap: var(--spacing-sm);">
-          <div class="skeleton" style="height: 6px; width: 80px; border-radius: 3px;"></div>
-          <div class="skeleton" style="height: 12px; width: 30px;"></div>
         </div>
       </td>
       <td><div class="skeleton" style="height: 30px; width: 30px; border-radius: 4px;"></div></td>
@@ -404,7 +397,7 @@ function showTableError(msg) {
   if (tableBody) {
     tableBody.innerHTML = `
       <tr>
-        <td colspan="8" class="text-center" style="padding: var(--spacing-xl); color: var(--color-danger);">
+        <td colspan="7" class="text-center" style="padding: var(--spacing-xl); color: var(--color-danger);">
           <div style="font-size: 24px; margin-bottom: 10px;">⚠️</div>
           <div style="font-weight: 600; margin-bottom: 4px;">Error al cargar alertas</div>
           <div style="font-size: 13px; color: var(--color-text-secondary); margin-bottom: 12px;">${msg || 'No se pudo conectar al servidor.'}</div>

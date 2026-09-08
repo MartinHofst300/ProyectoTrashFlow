@@ -30,7 +30,7 @@
 
 .btn-primary {
   background-color: var(--color-accent-teal);
-  color: var(--text-dark) !important;
+  color: var(--btn-primary-text, #121815) !important;
 }
 
 .btn-primary:hover {
@@ -47,6 +47,60 @@
 .btn-secondary:hover {
   background-color: rgba(255, 255, 255, 0.05);
   border-color: var(--color-text-secondary);
+}
+
+/* --- Density Modes --- */
+body.density-compact {
+  --spacing-xs: 3px;
+  --spacing-sm: 6px;
+  --spacing-md: 10px;
+  --spacing-lg: 14px;
+  --spacing-xl: 18px;
+}
+body.density-compact .card {
+  padding: 12px 14px !important;
+}
+body.density-compact .table th,
+body.density-compact .table td {
+  padding: 6px 12px !important;
+}
+body.density-compact .btn {
+  padding: 6px 12px !important;
+  font-size: 13px !important;
+}
+body.density-compact .content-body {
+  padding: 14px !important;
+}
+body.density-compact .kpis-grid {
+  gap: 10px !important;
+}
+body.density-compact .kpi-card {
+  padding: 10px 14px !important;
+}
+
+body.density-comfortable {
+  --spacing-xs: 6px;
+  --spacing-sm: 12px;
+  --spacing-md: 20px;
+  --spacing-lg: 32px;
+  --spacing-xl: 44px;
+}
+body.density-comfortable .card {
+  padding: 28px 32px !important;
+}
+body.density-comfortable .table th,
+body.density-comfortable .table td {
+  padding: 18px 20px !important;
+}
+body.density-comfortable .btn {
+  padding: 12px 24px !important;
+  font-size: 15px !important;
+}
+body.density-comfortable .content-body {
+  padding: 32px !important;
+}
+body.density-comfortable .kpis-grid {
+  gap: 24px !important;
 }
 
 /* --- Cards --- */
@@ -106,24 +160,25 @@
 .form-input, .form-select {
   width: 100%;
   padding: 10px 12px;
-  background-color: rgba(0, 0, 0, 0.3);
+  background-color: var(--color-input-bg, rgba(0, 0, 0, 0.3));
   border: 1px solid var(--color-border);
   border-radius: var(--radius-input);
   color: var(--color-text-primary);
   font-size: 14px;
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background-color var(--transition-fast);
 }
 
 .form-input::placeholder {
-  color: rgba(136, 136, 170, 0.5);
+  color: var(--color-text-secondary);
+  opacity: 0.65;
 }
 
 .form-input:focus, .form-select:focus {
   border-color: var(--color-accent-teal);
-  box-shadow: 0 0 0 3px rgba(107, 143, 138, 0.15);
+  box-shadow: 0 0 0 3px rgba(96, 183, 186, 0.2);
 }
 
-/* Select nativo: forzar colores del tema oscuro */
+/* Select nativo: forzar colores compatibles con el tema activo */
 select.form-input {
   appearance: none;
   -webkit-appearance: none;
@@ -135,8 +190,8 @@ select.form-input {
 }
 
 select.form-input option {
-  background-color: var(--color-surface, #1a1a2e);
-  color: var(--color-text-primary, #e2e8f0);
+  background-color: var(--color-card);
+  color: var(--color-text-primary);
   padding: 8px 12px;
 }
 
@@ -172,22 +227,15 @@ select.form-input option {
 }
 
 .badge-pendiente {
-  background-color: rgba(245, 166, 35, 0.15);
-  color: var(--color-warning);
-  border: 1px solid rgba(245, 166, 35, 0.3);
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #EF4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
-.badge-asignada {
-  background-color: rgba(74, 144, 217, 0.15);
-  color: var(--color-info);
-  border: 1px solid rgba(74, 144, 217, 0.3);
-}
-
-.badge-en-proceso {
-  /* verde claro */
-  background-color: rgba(88, 214, 141, 0.15);
-  color: #58D68D;
-  border: 1px solid rgba(88, 214, 141, 0.3);
+.badge-alertada, .badge-asignada, .badge-en-proceso {
+  background-color: rgba(245, 166, 35, 0.18);
+  color: #F5A623;
+  border: 1px solid rgba(245, 166, 35, 0.35);
 }
 
 .badge-resuelta {
@@ -668,20 +716,20 @@ select.form-input option {
   align-items: center;
   justify-content: space-between;
   padding: 10px 14px;
-  background-color: var(--bg-dark-alt);
-  color: var(--white);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 6px;
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  background-color: var(--color-input-bg, var(--color-card));
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-input);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background-color var(--transition-fast);
 }
 
 .custom-select-container:hover .custom-select-trigger {
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.25);
 }
 
 .custom-select-container.open .custom-select-trigger {
   border-color: var(--accent-teal);
-  box-shadow: 0 0 0 2px rgba(96, 183, 186, 0.2);
+  box-shadow: 0 0 0 2px rgba(96, 183, 186, 0.25);
 }
 
 .custom-select-arrow {
@@ -703,9 +751,9 @@ select.form-input option {
   width: 100%;
   max-height: 220px;
   overflow-y: auto;
-  background-color: var(--bg-dark-alt);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 6px;
+  background-color: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
   box-shadow: var(--shadow-lg);
   z-index: 999;
   list-style: none;
@@ -720,18 +768,18 @@ select.form-input option {
 
 .custom-select-option {
   padding: 10px 14px;
-  color: var(--white);
+  color: var(--color-text-primary);
   transition: background-color var(--transition-fast), color var(--transition-fast);
 }
 
 .custom-select-option:hover {
-  background-color: var(--primary);
-  color: var(--white);
+  background-color: var(--color-card-hover);
+  color: var(--color-text-primary);
 }
 
 .custom-select-option.selected {
   background-color: var(--primary);
-  color: var(--white);
+  color: #FFFFFF;
   font-weight: 600;
 }
 

@@ -14,12 +14,226 @@ Dependencias:
 """
 
 import datetime
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt
 from api.database import query
 
 # Registro del Blueprint del dashboard
 dashboard_bp = Blueprint('dashboard', __name__)
+
+
+@dashboard_bp.route('/estadisticas/reportes', methods=['GET'])
+@jwt_required()
+def get_reports_stats():
+    """
+    GET /api/estadisticas/reportes
+    
+    Provee métricas analíticas detalladas y agregaciones multidimensionales
+    para el módulo de reportes y exportación.
+    Soporta filtros opcionales por rango de fecha (desde, hasta) y por zona_id.
+    """
+    claims = get_jwt()
+    if claims.get("rol") != "admin":
+        return jsonify({"error": "No autorizado", "mensaje": "Se requieren privilegios de administrador"}), 403
+
+    desde = request.args.get('desde')
+    hasta = request.args.get('hasta')
+    zona_id = request.args.get('zona_id')
+    dias = request.args.get('dias', type=int)
+
+    # Construir cláusula WHERE dinámica
+    condiciones = ["1=1"]
+    params = []
+
+    if desde:
+        condiciones.append("DATE(a.detectado_en) >= %s")
+        params.append(desde)
+    elif dias:
+        condiciones.append("DATE(a.detectado_en) >= DATE_SUB(CURDATE(), INTERVAL %s DAY)")
+        params.append(dias)
+    else:
+        # Por defecto últimos 30 días
+        condiciones.append("DATE(a.detectado_en) >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)")
+
+    if hasta:
+        condiciones.append("DATE(a.detectado_en) <= %s")
+        params.append(hasta)
+
+    if zona_id and zona_id != 'todas' and zona_id != '0':
+        condiciones.append("a.zona_id = %s")
+        params.append(zona_id)
+
+    where_clause = " AND ".join(condiciones)
+
+    try:
+        # 1. KPIs Generales
+        kpi_sql = f"""
+            SELECT
+                COUNT(a.id) AS total_alertas,
+                SUM(CASE WHEN a.estado_id = 1 THEN 1 ELSE 0 END) AS pendientes,
+                SUM(CASE WHEN a.estado_id = 2 THEN 1 ELSE 0 END) AS asignadas,
+                SUM(CASE WHEN a.estado_id = 3 THEN 1 ELSE 0 END) AS en_proceso,
+                SUM(CASE WHEN a.estado_id = 4 THEN 1 ELSE 0 END) AS resueltas,
+                SUM(CASE WHEN a.estado_id = 5 THEN 1 ELSE 0 END) AS descartadas,
+                AVG(CASE 
+                    WHEN a.estado_id = 4 AND a.resuelto_en IS NOT NULL 
+                    THEN TIMESTAMPDIFF(MINUTE, a.detectado_en, a.resuelto_en) 
+                    ELSE NULL 
+                END) AS tiempo_promedio_min
+            FROM alertas a
+            WHERE {where_clause}
+        """
+        kpi_res = query(kpi_sql, tuple(params))
+        kpi_row = kpi_res[0] if kpi_res else {}
+
+        total = int(kpi_row.get('total_alertas') or 0)
+        resueltas = int(kpi_row.get('resueltas') or 0)
+        pendientes = int(kpi_row.get('pendientes') or 0)
+        en_proceso = int(kpi_row.get('en_proceso') or 0) + int(kpi_row.get('asignadas') or 0)
+        descartadas = int(kpi_row.get('descartadas') or 0)
+        tiempo_prom = round(float(kpi_row.get('tiempo_promedio_min') or 25), 1)
+        efectividad = round((resueltas / total * 100), 1) if total > 0 else 0
+
+        # 2. Tendencia Diaria (Línea de tiempo)
+        tendencia_sql = f"""
+            SELECT 
+                DATE(a.detectado_en) AS fecha,
+                COUNT(a.id) AS total,
+                SUM(CASE WHEN a.estado_id = 4 THEN 1 ELSE 0 END) AS resueltas
+            FROM alertas a
+            WHERE {where_clause}
+            GROUP BY DATE(a.detectado_en)
+            ORDER BY fecha ASC
+        """
+        tendencia_res = query(tendencia_sql, tuple(params))
+        tendencia_data = []
+        for r in tendencia_res:
+            tendencia_data.append({
+                "fecha": r['fecha'].strftime('%Y-%m-%d') if r.get('fecha') else '',
+                "total": int(r['total'] or 0),
+                "resueltas": int(r['resueltas'] or 0)
+            })
+
+        # 3. Distribución por Zona
+        zonas_sql = f"""
+            SELECT 
+                COALESCE(z.nombre, 'Sin Zona') AS zona_nombre,
+                COALESCE(z.color_hex, '#479DE5') AS color,
+                COUNT(a.id) AS total
+            FROM alertas a
+            LEFT JOIN zonas z ON a.zona_id = z.id
+            WHERE {where_clause}
+            GROUP BY a.zona_id, z.nombre, z.color_hex
+            ORDER BY total DESC
+        """
+        zonas_res = query(zonas_sql, tuple(params))
+
+        # 4. Distribución por Estado
+        estados_data = [
+            {"estado": "Resueltas", "total": resueltas, "color": "#3D5843"},
+            {"estado": "En Proceso / Asignadas", "total": en_proceso, "color": "#F5A623"},
+            {"estado": "Pendientes", "total": pendientes, "color": "#E5484D"},
+            {"estado": "Descartadas", "total": descartadas, "color": "#7A857F"}
+        ]
+
+        # 5. Rendimiento de Operadores
+        operadores_sql = f"""
+            SELECT 
+                u.id,
+                CONCAT(u.nombre, ' ', u.apellido) AS nombre_completo,
+                COALESCE(z.nombre, 'Sin Zona') AS zona,
+                COUNT(a.id) AS total_asignadas,
+                SUM(CASE WHEN a.estado_id = 4 THEN 1 ELSE 0 END) AS resueltas,
+                AVG(CASE 
+                    WHEN a.estado_id = 4 AND a.resuelto_en IS NOT NULL 
+                    THEN TIMESTAMPDIFF(MINUTE, a.asignado_en, a.resuelto_en) 
+                    ELSE NULL 
+                END) AS tiempo_promedio_min
+            FROM alertas a
+            JOIN usuarios u ON a.operador_id = u.id
+            LEFT JOIN zonas z ON u.zona_id = z.id
+            WHERE {where_clause} AND u.rol_id = 2
+            GROUP BY u.id, u.nombre, u.apellido, z.nombre
+            ORDER BY resueltas DESC
+            LIMIT 10
+        """
+        operadores_res = query(operadores_sql, tuple(params))
+        operadores_data = []
+        for op in operadores_res:
+            res_count = int(op['resueltas'] or 0)
+            asig_count = int(op['total_asignadas'] or 0)
+            t_min = round(float(op['tiempo_promedio_min'] or 0), 1) if op['tiempo_promedio_min'] else 0
+            efect_op = round((res_count / asig_count * 100), 1) if asig_count > 0 else 0
+            operadores_data.append({
+                "id": op['id'],
+                "nombre": op['nombre_completo'],
+                "zona": op['zona'],
+                "asignadas": asig_count,
+                "resueltas": res_count,
+                "efectividad": efect_op,
+                "tiempo_promedio_min": t_min
+            })
+
+        # 6. Registros para Tabla y Exportación
+        alertas_detalle_sql = f"""
+            SELECT 
+                a.id,
+                a.confianza,
+                a.direccion,
+                COALESCE(z.nombre, 'Sin Zona') AS zona,
+                ea.nombre AS estado,
+                CONCAT(COALESCE(u.nombre, 'Sin'), ' ', COALESCE(u.apellido, 'Asignar')) AS operador,
+                a.detectado_en,
+                a.resuelto_en
+            FROM alertas a
+            LEFT JOIN zonas z ON a.zona_id = z.id
+            LEFT JOIN estados_alerta ea ON a.estado_id = ea.id
+            LEFT JOIN usuarios u ON a.operador_id = u.id
+            WHERE {where_clause}
+            ORDER BY a.detectado_en DESC
+            LIMIT 200
+        """
+        alertas_detalle_res = query(alertas_detalle_sql, tuple(params))
+        alertas_detalle = []
+        for ad in alertas_detalle_res:
+            alertas_detalle.append({
+                "id": ad['id'],
+                "confianza": float(ad['confianza'] or 0),
+                "direccion": ad['direccion'] or 'Sin dirección',
+                "zona": ad['zona'],
+                "estado": ad['estado'] or 'Pendiente',
+                "operador": ad['operador'].strip(),
+                "detectado_en": ad['detectado_en'].strftime('%Y-%m-%d %H:%M:%S') if ad.get('detectado_en') else '',
+                "resuelto_en": ad['resuelto_en'].strftime('%Y-%m-%d %H:%M:%S') if ad.get('resuelto_en') else '-'
+            })
+
+        return jsonify({
+            "kpis": {
+                "total_alertas": total,
+                "resueltas": resueltas,
+                "pendientes": pendientes,
+                "en_proceso": en_proceso,
+                "descartadas": descartadas,
+                "efectividad_pct": efectividad,
+                "tiempo_promedio_min": tiempo_prom
+            },
+            "tendencia_diaria": tendencia_data,
+            "distribucion_zonas": [
+                {
+                    "zona": z['zona_nombre'],
+                    "total": int(z['total']),
+                    "color": z['color']
+                } for z in zonas_res
+            ],
+            "distribucion_estados": estados_data,
+            "rendimiento_operadores": operadores_data,
+            "registros": alertas_detalle
+        }), 200
+
+    except Exception as e:
+        print(f"[Report Stats Error] {e}")
+        return jsonify({"error": "Error interno", "mensaje": "No se pudieron calcular las estadísticas del reporte"}), 500
+
 
 @dashboard_bp.route('/dashboard/hoy', methods=['GET'])
 @jwt_required()

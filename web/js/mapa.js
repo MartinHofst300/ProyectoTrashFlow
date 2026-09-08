@@ -98,7 +98,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Evalúa cada marcador guardado en memoria
     allAlertMarkers.forEach(item => {
       // Normaliza estados para concordar con los valores del checkbox
-      const statusVal = item.status === 'en proceso' ? 'en_proceso' : item.status.toLowerCase();
+      let statusVal = item.status.toLowerCase();
+      if (statusVal === 'en proceso' || statusVal === 'en_proceso' || statusVal === 'asignada') {
+        statusVal = 'alertada';
+      }
       const statusMatch = selectedStatuses.includes(statusVal);
       
       const zonaMatch = (selectedZona === 'todas') || (String(item.zonaId) === selectedZona);
@@ -148,23 +151,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Colores temáticos vibrantes según el estado para una interfaz premium
         let status_color = '#9E9E9E';
+        let estadoLabel = alerta.estado.toUpperCase();
         const estadoLower = alerta.estado.toLowerCase();
         if (estadoLower === 'pendiente') {
           status_color = '#FF1E27'; // Rojo de atención
-        } else if (estadoLower === 'en proceso' || estadoLower === 'en_proceso') {
-          status_color = '#FF9100'; // Naranja en marcha
+          estadoLabel = 'PENDIENTE';
+        } else if (estadoLower === 'en proceso' || estadoLower === 'en_proceso' || estadoLower === 'asignada' || estadoLower === 'alertada') {
+          status_color = '#F5A623'; // Ámbar Alertada
+          estadoLabel = 'ALERTADA';
         } else if (estadoLower === 'resuelta') {
           status_color = '#10B981'; // Verde resuelto
-        } else if (estadoLower === 'asignada') {
-          status_color = '#2563EB'; // Azul asignación
+          estadoLabel = 'RESUELTA';
         } else if (estadoLower === 'descartada') {
           status_color = '#6B7280'; // Gris descarte
+          estadoLabel = 'DESCARTADA';
         }
 
         const zona_color = alerta.zona_color || '#cccccc';
 
         // Crea un ícono personalizado usando HTML y CSS inline (DivIcon) para aplicar sombras dinámicas
-        const estado_class = alerta.estado.replace(' ', '_').replace(' ', '_').toLowerCase();
+        const estado_class = estadoLower.replace(' ', '_').replace(' ', '_');
         const markerClass = `map-marker map-marker-${estado_class}`;
         const markerIcon = L.divIcon({
           className: markerClass,
@@ -176,9 +182,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Instancia el marcador cartográfico
         const marker = L.marker([lat, lng], { icon: markerIcon });
 
-        // Prepara el popup enriquecido con imagen, estado, zona, confianza y fecha de detección
+        // Prepara el popup enriquecido con imagen, estado, zona y fecha de detección
         const thumbUrl = alerta.foto ? `${BASE_URL}/${alerta.foto}` : `${BASE_URL}/static/fotos/placeholder_sin_evidencia.jpg`;
-        const estadoLabel = alerta.estado.toUpperCase();
         
         const popupContent = `
           <div class="map-popup-card">
@@ -217,7 +222,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (openPopupAlertId) {
         const found = allAlertMarkers.find(item => item.id === openPopupAlertId);
         if (found) {
-          const statusVal = found.status === 'en proceso' ? 'en_proceso' : found.status.toLowerCase();
+          let statusVal = found.status.toLowerCase();
+          if (statusVal === 'en proceso' || statusVal === 'en_proceso' || statusVal === 'asignada') {
+            statusVal = 'alertada';
+          }
           const selectedStatuses = Array.from(filterCheckboxes)
             .filter(cb => cb.checked)
             .map(cb => cb.value);

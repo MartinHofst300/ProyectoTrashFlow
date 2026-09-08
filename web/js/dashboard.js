@@ -255,8 +255,9 @@ async function loadRecentAlerts() {
     // Mapeo estético de estados con sus respectivas clases CSS
     const statesMap = {
       pendiente: { label: 'Pendiente', badgeClass: 'badge-pendiente' },
-      asignada: { label: 'Asignada', badgeClass: 'badge-asignada' },
-      en_proceso: { label: 'En Proceso', badgeClass: 'badge-en-proceso' },
+      asignada: { label: 'Alertada', badgeClass: 'badge-alertada' },
+      en_proceso: { label: 'Alertada', badgeClass: 'badge-alertada' },
+      alertada: { label: 'Alertada', badgeClass: 'badge-alertada' },
       resuelta: { label: 'Resuelta', badgeClass: 'badge-resuelta' },
       descartada: { label: 'Descartada', badgeClass: 'badge-descartada' }
     };

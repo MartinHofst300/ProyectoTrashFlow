@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dispositivos de Campo — TrashFlow</title>
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Gestión y monitoreo en tiempo real de los dispositivos de campo del sistema TrashFlow.">
+  
+  <link rel="icon" type="image/png" href="../assets/isotipo.png">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/sidebar.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/hardware.css">
+</head>
+<body>
+  <div class="app-container">
+    
+    <!-- Sidebar Navigation (dynamically rendered by JS) -->
+    <aside class="sidebar"></aside>
+    
+    <!-- Main Content Container -->
+    <main class="main-content">
+      
+      <!-- Topbar Header -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <h1 class="topbar-title">Dispositivos de Campo</h1>
+          <div class="topbar-subtitle">
+            <span>📍 Dispositivos de Campo</span>
+          </div>
+        </div>
+        
+        <div class="topbar-right">
+          <!-- Notification Bell -->
+          <div class="notification-bell" title="Alertas pendientes">
+            <svg viewBox="0 0 24 24">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
+          </div>
+          
+          <!-- Profile Initials Icon -->
+          <div class="user-profile">
+            <div class="user-avatar" title="Cargando...">--</div>
+          </div>
+        </div>
+      </header>
+      
+      <!-- Scroll Content Body -->
+      <div class="content-body">
+        
+        <!-- Header panel with actions -->
+        <div class="hardware-header">
+          <div>
+            <h2 class="card-title" style="font-size: 20px;">Dispositivos de Campo y Cuadrillas</h2>
+            <p class="card-subtitle">Administre y supervise la conectividad en vivo de los dispositivos portátiles utilizados por los operarios de recolección.</p>
+          </div>
+          
+          <div class="hardware-actions">
+            <button id="btn-refrescar" class="btn btn-secondary" title="Actualizar estado de conexión">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <polyline points="1 20 1 14 7 14"></polyline>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+              </svg>
+              <span class="btn-text">Refrescar</span>
+            </button>
+            <button id="btn-nuevo-dispositivo" class="btn btn-primary">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              <span class="btn-text">Nuevo Dispositivo</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Hardware KPI summary cards -->
+        <section class="grid kpis-grid" id="hw-kpis-container">
+          <div class="card kpi-card">
+            <div class="kpi-card-content">
+              <h3 class="card-title">Total Dispositivos</h3>
+              <div class="kpi-value" id="kpi-total-hw">--</div>
+              <div class="card-subtitle text-info">Registrados en sistema</div>
+            </div>
+          </div>
+          <div class="card kpi-card">
+            <div class="kpi-card-content">
+              <h3 class="card-title">En Línea Ahora</h3>
+              <div class="kpi-value text-success" id="kpi-online-hw">--</div>
+              <div class="card-subtitle text-success">Transmitiendo señal (&lt;5m)</div>
+            </div>
+          </div>
+          <div class="card kpi-card">
+            <div class="kpi-card-content">
+              <h3 class="card-title">Asignados a Operario</h3>
+              <div class="kpi-value" id="kpi-asignados-hw">--</div>
+              <div class="card-subtitle text-warning">En cuadrillas activas</div>
+            </div>
+          </div>
+          <div class="card kpi-card">
+            <div class="kpi-card-content">
+              <h3 class="card-title">Disponibles / Reserva</h3>
+              <div class="kpi-value" id="kpi-reserva-hw">--</div>
+              <div class="card-subtitle text-muted">Sin operario asignado</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Devices Table Section -->
+        <section class="card table-card">
+          <div class="card-header">
+            <div>
+              <h3 class="card-title">Listado de Dispositivos de Campo</h3>
+              <p class="card-subtitle">Monitoreo de señal, código de vinculación y asignación de operarios de cuadrilla.</p>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table" id="devices-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Dispositivo / Identificador</th>
+                  <th>Estado</th>
+                  <th>Operario Asignado</th>
+                  <th>Código de Vinculación</th>
+                  <th>Última Conexión</th>
+                  <th style="text-align: right;">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="devices-table-body">
+                <!-- Skeletons renderizados por JS -->
+                <tr class="skeleton-row"></tr>
+                <tr class="skeleton-row"></tr>
+                <tr class="skeleton-row"></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Arduino Quick Guide Snippet Card -->
+        <!-- Operational Instructions Card -->
+        <section class="card guide-card">
+          <div class="guide-header">
+            <div class="guide-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+              </svg>
+            </div>
+            <div>
+              <h3 class="card-title">Protocolo Operativo de Cuadrillas en Campo</h3>
+              <p class="card-subtitle">Guía de uso para el personal de despacho y los operarios de recolección en vía pública.</p>
+            </div>
+          </div>
+
+          <div class="protocol-grid">
+            <div class="protocol-step">
+              <div class="step-badge">1</div>
+              <div class="step-content">
+                <strong>Asignación en Guardia</strong>
+                <p>Al iniciar el turno, el supervisor asigna una terminal disponible al operario mediante el botón <em>"Asignar"</em> en la tabla superior.</p>
+              </div>
+            </div>
+
+            <div class="protocol-step">
+              <div class="step-badge">2</div>
+              <div class="step-content">
+                <strong>Notificación Automática</strong>
+                <p>Al detectarse acumulación de residuos en la zona asignada, la terminal se ilumina y vibra mostrando la dirección exacta en pantalla.</p>
+              </div>
+            </div>
+
+            <div class="protocol-step">
+              <div class="step-badge">3</div>
+              <div class="step-content">
+                <strong>Respuesta y Monitoreo</strong>
+                <p>Al recibir el aviso en la terminal, el sistema actualiza la alerta a <em>"Alertada"</em> indicando que el operario ya fue notificado con la ubicación.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Create Device Modal -->
+  <div id="device-modal" class="modal-overlay">
+    <div class="modal-container" style="max-width: 520px;">
+      <button class="modal-close-btn" id="modal-close-btn" aria-label="Cerrar modal">
+        <svg viewBox="0 0 24 24">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+      
+      <div class="modal-body" style="align-items: flex-start; padding: var(--spacing-lg);">
+        <h3 class="modal-header-title">Registrar Nuevo Dispositivo</h3>
+        <p class="card-subtitle" style="margin-bottom: var(--spacing-md);">Crea un nuevo dispositivo de campo y genera automáticamente su código de vinculación seguro.</p>
+        
+        <form id="device-form" class="modal-form-grid" style="width: 100%;">
+          
+          <div class="form-group full-width-field">
+            <label for="dev-nombre" class="form-label">Nombre o Identificador del Dispositivo *</label>
+            <input type="text" id="dev-nombre" class="form-input" placeholder="Ej: Dispositivo Móvil #4 — Cuadrilla Munro" required autocomplete="off">
+          </div>
+
+          <div class="full-width-field form-error" id="form-error-msg">
+            ⚠️ Ocurrió un error.
+          </div>
+          
+          <div class="modal-footer" style="width: 100%;">
+            <button type="button" class="btn btn-secondary" id="btn-cancelar-crear">Cancelar</button>
+            <button type="submit" class="btn btn-primary" id="btn-guardar-device">Crear y Generar Código</button>
+          </div>
+          
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Token Success Modal (Shows full token to copy to Arduino) -->
+  <div id="token-success-modal" class="modal-overlay">
+    <div class="modal-container" style="max-width: 540px;">
+      <button class="modal-close-btn" id="token-modal-close-btn" aria-label="Cerrar modal">
+        <svg viewBox="0 0 24 24">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+
+      <div class="modal-body" style="align-items: flex-start; padding: var(--spacing-lg);">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+          <span style="display: inline-flex; padding: 6px; border-radius: 50%; background: rgba(96, 183, 186, 0.2); color: var(--accent-teal);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </span>
+          <h3 class="modal-header-title" style="margin: 0;">¡Dispositivo Creado con Éxito!</h3>
+        </div>
+        
+        <p class="card-subtitle" style="margin-bottom: var(--spacing-md);">
+          Copie el siguiente <strong>Código de Vinculación</strong> para sincronizar el equipo portátil:
+        </p>
+
+        <div class="token-display-box">
+          <code id="full-token-text">trashflow_esp32_...</code>
+          <button type="button" class="btn btn-secondary btn-copy" id="btn-copy-token" title="Copiar al portapapeles">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            <span id="copy-btn-text">Copiar</span>
+          </button>
+        </div>
+
+        <div class="modal-footer" style="width: 100%; margin-top: var(--spacing-lg);">
+          <button type="button" class="btn btn-primary" id="btn-cerrar-token-modal">Entendido, cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Assign Operator Modal -->
+  <div id="assign-modal" class="modal-overlay">
+    <div class="modal-container" style="max-width: 480px;">
+      <button class="modal-close-btn" id="assign-close-btn" aria-label="Cerrar modal">
+        <svg viewBox="0 0 24 24">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+
+      <div class="modal-body" style="align-items: flex-start; padding: var(--spacing-lg);">
+        <h3 class="modal-header-title">Asignar Operario a Terminal</h3>
+        <p class="card-subtitle" id="assign-device-name" style="margin-bottom: var(--spacing-md);">Seleccione el operario que portará este dispositivo en la vía pública.</p>
+
+        <form id="assign-form" style="width: 100%;">
+          <input type="hidden" id="assign-device-id">
+          
+          <div class="form-group full-width-field">
+            <label for="assign-operator-select" class="form-label">Operario de Campo</label>
+            <select id="assign-operator-select" class="form-input">
+              <option value="">-- Sin asignar (Dejar en reserva) --</option>
+              <!-- Dinámicamente llenado por hardware.js -->
+            </select>
+          </div>
+
+          <div class="full-width-field form-error" id="assign-error-msg">
+            ⚠️ Ocurrió un error.
+          </div>
+
+          <div class="modal-footer" style="width: 100%; margin-top: var(--spacing-md);">
+            <button type="button" class="btn btn-secondary" id="btn-cancelar-asignar">Cancelar</button>
+            <button type="submit" class="btn btn-primary" id="btn-guardar-asignacion">Guardar Asignación</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Core JavaScript Imports -->
+  <script src="../js/config.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/hardware.js"></script>
+</body>
+</html>
