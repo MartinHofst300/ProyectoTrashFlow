@@ -49,7 +49,7 @@ CAMARA_ID = int(os.getenv("CAMARA_ID", 1))
 CAMARA_TOKEN = os.getenv("CAMARA_TOKEN", "token_camara_1_aqui")
 CAMARA_LATITUD = float(os.getenv("CAMARA_LATITUD", -34.5250000))
 CAMARA_LONGITUD = float(os.getenv("CAMARA_LONGITUD", -58.4730000))
-API_URL = os.getenv("API_URL", "http://localhost:5000")
+API_URL = os.getenv("API_URL", "http://localhost:5005")
 
 # Umbrales operativos de detección
 UMBRAL_CONFIANZA       = 0.85  # Confianza mínima para considerar una detección válida
@@ -73,11 +73,11 @@ os.makedirs(DETECCIONES_DIR, exist_ok=True)
 def check_api_connection(url):
     """
     Realiza un ping HTTP rápido al endpoint de la API Flask para verificar su estado de conexión.
-    Retorna True si responde correctamente, de lo contrario False.
+    Retorna True si responde correctamente (incluso 401 que indica servidor activo), de lo contrario False.
     """
     try:
-        requests.get(f"{url.rstrip('/')}/api/alertas", timeout=2)
-        return True
+        r = requests.get(f"{url.rstrip('/')}/api/alertas", timeout=3)
+        return r.status_code in (200, 401, 403)
     except requests.RequestException:
         return False
 
@@ -98,9 +98,9 @@ print("[TrashFlow] Modelo YOLOv8n cargado correctamente.")
 # Verifica la conectividad inicial con el backend REST
 api_online = check_api_connection(API_URL)
 if api_online:
-    print("[TrashFlow] Conectado a la API.")
+    print(f"[TrashFlow] Conectado exitosamente a la API ({API_URL}).")
 else:
-    print("[TrashFlow] Sin conexion a la API. Funcionando en modo local.")
+    print(f"[TrashFlow] Sin conexion a la API ({API_URL}). Funcionando en modo local.")
 
 print("[TrashFlow] Camara activa. Presiona Q para salir.")
 

@@ -211,16 +211,28 @@ function initModals() {
   const formDev = document.getElementById('device-form');
 
   if (btnNuevo && modalDev) {
-    btnNuevo.addEventListener('click', () => {
-      formDev.reset();
+    btnNuevo.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (formDev) formDev.reset();
       hideError('form-error-msg');
+      modalDev.classList.add('active');
       modalDev.classList.add('open');
-      document.getElementById('dev-nombre')?.focus();
+      setTimeout(() => document.getElementById('dev-nombre')?.focus(), 50);
     });
   }
 
   [closeDev, cancelDev].forEach(btn => {
-    btn?.addEventListener('click', () => modalDev.classList.remove('open'));
+    btn?.addEventListener('click', () => {
+      modalDev?.classList.remove('active');
+      modalDev?.classList.remove('open');
+    });
+  });
+
+  modalDev?.addEventListener('click', (e) => {
+    if (e.target === modalDev) {
+      modalDev.classList.remove('active');
+      modalDev.classList.remove('open');
+    }
   });
 
   if (formDev) {
@@ -240,6 +252,7 @@ function initModals() {
           body: JSON.stringify({ nombre })
         });
 
+        modalDev.classList.remove('active');
         modalDev.classList.remove('open');
         showTokenSuccessModal(res.token_device, res.nombre);
         await fetchDevices();
@@ -260,7 +273,17 @@ function initModals() {
   const btnCopy = document.getElementById('btn-copy-token');
 
   [closeToken, btnCerrarToken].forEach(b => {
-    b?.addEventListener('click', () => modalToken.classList.remove('open'));
+    b?.addEventListener('click', () => {
+      modalToken?.classList.remove('active');
+      modalToken?.classList.remove('open');
+    });
+  });
+
+  modalToken?.addEventListener('click', (e) => {
+    if (e.target === modalToken) {
+      modalToken.classList.remove('active');
+      modalToken.classList.remove('open');
+    }
   });
 
   if (btnCopy) {
@@ -284,7 +307,17 @@ function initModals() {
   const formAssign = document.getElementById('assign-form');
 
   [closeAssign, cancelAssign].forEach(b => {
-    b?.addEventListener('click', () => modalAssign.classList.remove('open'));
+    b?.addEventListener('click', () => {
+      modalAssign?.classList.remove('active');
+      modalAssign?.classList.remove('open');
+    });
+  });
+
+  modalAssign?.addEventListener('click', (e) => {
+    if (e.target === modalAssign) {
+      modalAssign.classList.remove('active');
+      modalAssign.classList.remove('open');
+    }
   });
 
   if (formAssign) {
@@ -303,6 +336,7 @@ function initModals() {
           body: JSON.stringify({ operador_id: opId })
         });
 
+        modalAssign.classList.remove('active');
         modalAssign.classList.remove('open');
         await fetchDevices();
         showToast('Asignación de operario actualizada.', 'success');
@@ -334,6 +368,7 @@ function showTokenSuccessModal(token, deviceName) {
   const tokenEl = document.getElementById('full-token-text');
   if (modal && tokenEl) {
     tokenEl.textContent = token;
+    modal.classList.add('active');
     modal.classList.add('open');
   }
 }
@@ -361,6 +396,7 @@ window.openAssignModal = function(deviceId, deviceName, currentOpId) {
     select.innerHTML += `<option value="${op.id}" ${selected}>${escapeHTML(opNombre)}</option>`;
   });
 
+  modal.classList.add('active');
   modal.classList.add('open');
 };
 

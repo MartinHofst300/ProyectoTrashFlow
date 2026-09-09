@@ -568,7 +568,8 @@ select.form-input option {
   transition: opacity var(--transition-normal);
 }
 
-.modal-overlay.active {
+.modal-overlay.active,
+.modal-overlay.open {
   opacity: 1;
   pointer-events: auto;
 }
@@ -587,7 +588,8 @@ select.form-input option {
   /* El scroll se maneja en modal-body, no en el container */
 }
 
-.modal-overlay.active .modal-container {
+.modal-overlay.active .modal-container,
+.modal-overlay.open .modal-container {
   transform: translateY(0);
 }
 

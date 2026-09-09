@@ -53,15 +53,17 @@ def auto_asignar_operario(alerta_id, zona_id):
             f"""
             SELECT
                 u.id,
-                COUNT(CASE WHEN a.estado_id IN (2, 3) THEN 1 END) AS alertas_activas
+                COUNT(DISTINCT CASE WHEN a.estado_id IN (2, 3) THEN a.id END) AS alertas_activas,
+                COUNT(DISTINCT dh.id) AS tiene_hardware
             FROM usuarios u
             LEFT JOIN alertas a ON a.operador_id = u.id AND a.estado_id IN (2, 3)
+            LEFT JOIN dispositivos_hardware dh ON dh.operador_id = u.id AND dh.activo = 1
             WHERE u.rol_id = 2
               AND u.activo = 1
               AND u.eliminado_en IS NULL
               {zona_clause}
             GROUP BY u.id
-            ORDER BY alertas_activas ASC
+            ORDER BY tiene_hardware DESC, alertas_activas ASC
             LIMIT 1
             """,
             params

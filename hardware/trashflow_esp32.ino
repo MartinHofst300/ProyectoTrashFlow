@@ -9,8 +9,11 @@
  *       SDA → GPIO 21 (D21)
  *       SCL → GPIO 22 (D22)
  *       VCC → 3.3V  |  GND → GND
- *   - Motor vibrador con transistor BC547 en GPIO 4 (D4)
- *       (desactivado en esta versión de prueba — VIBRADOR_HABILITADO = false)
+ *   - Buzzer activo alimentado a 5V (VIN) con transistor BC547 en GPIO 4 (D4):
+ *       GPIO 4 → Resistencia 1.2kΩ → Base BC547
+ *       Colector → Terminal negativo (-) del Buzzer
+ *       Emisor → GND
+ *       Terminal positivo (+) del Buzzer → Pin VIN (5V)
  *
  * Librerías (instalar desde Library Manager del IDE Arduino):
  *   - ArduinoJson       (Benoit Blanchon, versión 6.x)
@@ -47,14 +50,14 @@ const char *SERVER_URL = "http://192.168.100.5:5005";
 const char *DEVICE_TOKEN = "trashflow_esp32_device_token_demo_2026";
 
 // ─── MODO DE PRUEBA ────────────────────────────────────────
-// Poner en true para habilitar el motor vibrador
-#define VIBRADOR_HABILITADO true
+// Poner en true para habilitar el buzzer
+#define BUZZER_HABILITADO true
 
 // ============================================================
 //  PINES Y CONSTANTES
 // ============================================================
 
-#define PIN_VIBRADOR 4 // GPIO 4 (D4) — Motor vibrador con BC547
+#define PIN_BUZZER 4   // GPIO 4 (D4) — Buzzer activo con BC547 (alimentado a 5V)
 #define PIN_SDA 21     // GPIO 21 (D21) — SDA del LCD I2C
 #define PIN_SCL 22     // GPIO 22 (D22) — SCL del LCD I2C
 #define LCD_ADDR 0x27  // Dirección I2C del LCD (probar 0x3F si no enciende)
@@ -83,6 +86,7 @@ unsigned long tiempoApagadoDesde = 0; // millis() cuando se apagó la pantalla
 int alertaActivaId = -1;      // ID de la última alerta recibida (-1 = ninguna)
 bool hayAlertaActiva = false; // true = ciclo de parpadeo activo
 bool pantallaEncendida = false; // true = LCD mostrando alerta ahora mismo
+bool recordatorioBuzzerEmitido = false; // true = ya sonó el único recordatorio sonoro (a los 40s)
 
 // ── Datos de la alerta activa (guardados para re-dibujar) ─
 // Se actualizan al recibir una alerta nueva con id distinto.
@@ -90,6 +94,24 @@ bool pantallaEncendida = false; // true = LCD mostrando alerta ahora mismo
 String zonaActual = "";
 String direccionActual = "";
 String horaActual = "";
+
+// ============================================================
+//  PROTOTIPOS DE FUNCIONES (para compatibilidad Arduino IDE / ESP32)
+// ============================================================
+
+void pantallaArranque();
+void pantallaSinAlertas();
+void pantallaWiFiError();
+void pantallaErrorRed();
+void pantallaErrorServidor(int codigo);
+void pantallaDispositivoSinAsignar();
+void dibujarPantallaAlerta(bool esRecordatorio);
+void dibujarPantallaAlerta();
+void mostrarAlerta(int alertaId, String zona, String direccion, String hora);
+void consultarAlerta();
+void confirmarAlerta(int alertaId);
+void sonarBuzzer(int veces, int duracionMs);
+void conectarWiFi();
 
 // ============================================================
 //  SETUP
@@ -100,10 +122,10 @@ void setup() {
   delay(500);
   Serial.println("\n[TrashFlow] Iniciando dispositivo ESP32...");
 
-// Configurar pines (vibrador solo si está habilitado)
-#if VIBRADOR_HABILITADO
-  pinMode(PIN_VIBRADOR, OUTPUT);
-  digitalWrite(PIN_VIBRADOR, LOW);
+// Configurar pines (buzzer solo si está habilitado)
+#if BUZZER_HABILITADO
+  pinMode(PIN_BUZZER, OUTPUT);
+  digitalWrite(PIN_BUZZER, LOW);
 #endif
 
   // Inicializar LCD con pines I2C correctos
@@ -158,11 +180,18 @@ void loop() {
 
     } else if (!pantallaEncendida &&
                (ahora - tiempoApagadoDesde >= PANTALLA_OFF_MS)) {
-      // Fin del ciclo OFF → re-encender con datos guardados (sin vibrar)
-      Serial.println("[LCD] Ciclo OFF cumplido — re-encendiendo pantalla.");
+      // Fin del ciclo OFF → re-encender pantalla con datos guardados (modo recordatorio)
+      Serial.println("[LCD] Ciclo OFF cumplido — re-encendiendo pantalla (recordatorio).");
       pantallaEncendida = true;
       tiempoEncendidoDesde = ahora;
-      dibujarPantallaAlerta();
+      dibujarPantallaAlerta(true);
+
+      // El buzzer solo suena en el PRIMER re-encendido (a los 40 seg).
+      // En los siguientes ciclos, el LCD sigue prendiendo/apagando pero en silencio.
+      if (!recordatorioBuzzerEmitido) {
+        sonarBuzzer(2, 200); // 2 beeps de recordatorio (única vez)
+        recordatorioBuzzerEmitido = true;
+      }
     }
   }
 
@@ -227,7 +256,7 @@ void consultarAlerta() {
                      " Dir=" + direccion + " Hora=" + hora);
 
       // Solo actuar si es una alerta DIFERENTE a la que ya está activa
-      // (evita redibujar/vibrar si el servidor sigue devolviendo la misma)
+      // (evita redibujar/sonar si el servidor sigue devolviendo la misma)
       if (alertaId != alertaActivaId) {
         alertaActivaId = alertaId;
         hayAlertaActiva = true;
@@ -333,21 +362,27 @@ void pantallaSinAlertas() {
  * globales zonaActual / direccionActual / horaActual.
  *
  * Layout del LCD 2004 (20×4):
- *   Fila 0: "!! NUEVA ALERTA !!"
+ *   Fila 0: "!! NUEVA ALERTA !!" o "-- RECORDATORIO --"
  *   Fila 1: "Zona: <zona>"
  *   Fila 2: "<dirección>" (máx 20 chars)
  *   Fila 3: "<hora>"       (ej: "15:30")
  *
- * Esta función NO vibra ni actualiza tiempos — solo renderiza.
- * Llamar desde mostrarAlerta() (primera vez) y desde el ciclo OFF→ON.
+ * Esta función NO activa buzzer ni actualiza tiempos — solo renderiza.
+ *
+ * @param esRecordatorio true si es el ciclo de re-encendido (recordatorio),
+ *                       false si es la primera vez que llega la alerta.
  */
-void dibujarPantallaAlerta() {
+void dibujarPantallaAlerta(bool esRecordatorio) {
   lcd.backlight();
   lcd.clear();
 
-  // Fila 0: título fijo
+  // Fila 0: título según si es alerta nueva o recordatorio
   lcd.setCursor(0, 0);
-  lcd.print("!! NUEVA ALERTA !!  ");
+  if (esRecordatorio) {
+    lcd.print("-- RECORDATORIO --  ");
+  } else {
+    lcd.print("!! NUEVA ALERTA !!  ");
+  }
 
   // Fila 1: zona
   lcd.setCursor(0, 1);
@@ -373,11 +408,16 @@ void dibujarPantallaAlerta() {
   lcd.print(lineaHora.substring(0, 20));
 }
 
+// Sobrecarga por compatibilidad
+void dibujarPantallaAlerta() {
+  dibujarPantallaAlerta(false);
+}
+
 /**
  * Primera vez que llega una alerta nueva:
  *   1. Guarda los datos localmente (para re-dibujar en ciclos posteriores)
  *   2. Arranca el ciclo de parpadeo (pantallaEncendida = true)
- *   3. Vibra para llamar la atención del operario
+ *   3. Hace sonar el buzzer con patrón insistente (6 beeps de 200ms)
  *   4. Dibuja la pantalla
  *
  * @param alertaId  ID de la alerta (solo para logs)
@@ -386,24 +426,21 @@ void dibujarPantallaAlerta() {
  * @param hora      Hora en formato "HH:MM"
  */
 void mostrarAlerta(int alertaId, String zona, String direccion, String hora) {
-  // 1. Guardar datos para el ciclo de parpadeo
+  // 1. Guardar datos para el ciclo de parpadeo y resetear recordatorio de buzzer
   zonaActual = zona;
   direccionActual = direccion;
   horaActual = hora;
+  recordatorioBuzzerEmitido = false; // Permitir el único recordatorio sonoro para esta nueva alerta
 
   // 2. Arrancar ciclo: pantalla ON, registrar tiempo
   pantallaEncendida = true;
   tiempoEncendidoDesde = millis();
 
-  // 3. Vibrar (atención del operario)
-  vibrar(3, 400);
+  // 3. Buzzer insistente para nueva alerta: 6 beeps rápidos de 200ms con pausas de 100ms
+  sonarBuzzer(6, 200);
 
-  // 4. Dibujar pantalla
-  dibujarPantallaAlerta();
-
-  // Pulso extra de vibración tras mostrar
-  delay(500);
-  vibrar(1, 600);
+  // 4. Dibujar pantalla (primera vez: "!! NUEVA ALERTA !!")
+  dibujarPantallaAlerta(false);
 
   Serial.println("[LCD] Alerta #" + String(alertaId) +
                  " mostrada — ciclo 20s ON / 20s OFF iniciado.");
@@ -481,28 +518,29 @@ void pantallaDispositivoSinAsignar() {
 }
 
 // ============================================================
-//  FUNCIÓN DE VIBRACIÓN
+//  FUNCIÓN DEL BUZZER
 // ============================================================
 
 /**
- * Activa el motor vibrador N veces con la duración indicada.
- * Si VIBRADOR_HABILITADO = false, solo imprime en Serial.
+ * Activa el buzzer activo N veces con la duración indicada.
+ * Pausa de 100ms entre beeps para un sonido insistente y claro.
+ * Si BUZZER_HABILITADO = false, solo imprime en Serial.
  *
- * @param veces      Cantidad de pulsos
- * @param duracionMs Duración de cada pulso en milisegundos
+ * @param veces      Cantidad de beeps
+ * @param duracionMs Duración de cada beep en milisegundos
  */
-void vibrar(int veces, int duracionMs) {
-#if VIBRADOR_HABILITADO
+void sonarBuzzer(int veces, int duracionMs) {
+#if BUZZER_HABILITADO
   for (int i = 0; i < veces; i++) {
-    digitalWrite(PIN_VIBRADOR, HIGH);
+    digitalWrite(PIN_BUZZER, HIGH);
     delay(duracionMs);
-    digitalWrite(PIN_VIBRADOR, LOW);
+    digitalWrite(PIN_BUZZER, LOW);
     if (i < veces - 1) {
-      delay(150); // Pausa breve entre pulsos
+      delay(100); // Pausa breve de 100ms entre beeps
     }
   }
 #else
-  Serial.println("[VIBRADOR] (deshabilitado) pulsos=" + String(veces) +
+  Serial.println("[BUZZER] (deshabilitado) beeps=" + String(veces) +
                  " dur=" + String(duracionMs) + "ms");
 #endif
 }

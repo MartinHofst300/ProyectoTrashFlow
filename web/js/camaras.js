@@ -46,6 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 const COOLDOWN_DURATION_MS = 30 * 60 * 1000; // 30 minutos
 
+window.loadCameras = loadCameras;
 async function loadCameras() {
   const container = document.getElementById('camaras-container');
   if (!container) return;
@@ -73,31 +74,15 @@ async function loadCameras() {
     data.forEach(camara => {
       const card = document.createElement('div');
       
-      // ── Comprobación de Cooldown (30 min tras última alerta) ──
-      let isCooldown = false;
-      let cooldownEndTime = 0;
+      card.className = 'card camera-card';
 
-      if (camara.ultima_alerta) {
-        const alertTime = new Date(camara.ultima_alerta.replace(/-/g, '/')).getTime();
-        const diffMs = Date.now() - alertTime;
-        if (diffMs >= 0 && diffMs < COOLDOWN_DURATION_MS) {
-          isCooldown = true;
-          cooldownEndTime = alertTime + COOLDOWN_DURATION_MS;
-        }
-      }
-
-      card.className = `card camera-card ${isCooldown ? 'is-cooldown' : ''}`;
-
-      // ── Estado: usar el campo estado de la DB + cooldown + umbral de 90s ──
+      // ── Estado: usar el campo estado de la DB + umbral de 90s ──
       let badgeClass = 'badge-offline';
       let badgeHtml  = 'Desconectado';
 
       if (camara.estado === 'mantenimiento') {
         badgeClass = 'badge-mantenimiento';
         badgeHtml  = 'Mantenimiento';
-      } else if (isCooldown) {
-        badgeClass = 'badge-cooldown';
-        badgeHtml  = '<span class="cooldown-dot"></span>Pausada (30m)';
       } else if (camara.estado === 'online' && camara.ultima_conexion) {
         // Umbral: 90 segundos (3 ciclos de heartbeat de 30s)
         const lastConn   = new Date(camara.ultima_conexion.replace(/-/g, '/'));
@@ -111,25 +96,6 @@ async function loadCameras() {
       const ultimaConexion = camara.ultima_conexion
         ? formatDateTime(camara.ultima_conexion)
         : 'Nunca conectado';
-
-      const cooldownBoxHtml = isCooldown ? `
-        <div class="camera-cooldown-box" id="cooldown-box-${camara.id}">
-          <div class="cooldown-box-header">
-            <span>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <polyline points="12 6 12 12 16 14"></polyline>
-              </svg>
-              Pausa anti-sobrecarga (30m)
-            </span>
-            <span style="font-size: 10.5px; opacity: 0.85;">Alerta reciente</span>
-          </div>
-          <div class="cooldown-box-timer">
-            <span class="cooldown-label">Reactivación en:</span>
-            <span class="cooldown-digits cooldown-countdown" data-camara-id="${camara.id}" data-target-time="${cooldownEndTime}">--:--</span>
-          </div>
-        </div>
-      ` : '';
 
       card.innerHTML = `
         <div class="camera-card-header">
@@ -158,8 +124,6 @@ async function loadCameras() {
             <span class="stat-value" title="${camara.ultima_conexion || ''}">${ultimaConexion}</span>
           </div>
         </div>
-
-        ${cooldownBoxHtml}
 
         <div class="camera-card-actions" style="margin-top: 15px; display: flex; gap: 8px; justify-content: flex-end;">
           <a href="alertas.html?camara_id=${camara.id}"
@@ -213,52 +177,11 @@ async function loadCameras() {
   }
 }
 
-/**
- * Temporizador en tiempo real (1s) para los contadores de enfriamiento
- */
 function initCooldownTicker() {
   if (window._cooldownInterval) {
     clearInterval(window._cooldownInterval);
+    window._cooldownInterval = null;
   }
-
-  function updateTimers() {
-    const countdownEls = document.querySelectorAll('.cooldown-countdown');
-    const now = Date.now();
-
-    countdownEls.forEach(el => {
-      const targetTime = parseInt(el.getAttribute('data-target-time'), 10);
-      if (!targetTime) return;
-
-      const remainingMs = targetTime - now;
-      if (remainingMs > 0) {
-        const totalSeconds = Math.ceil(remainingMs / 1000);
-        const minutes = Math.floor(totalSeconds / 60);
-        const seconds = totalSeconds % 60;
-        el.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')} restante`;
-      } else {
-        // Enfriamiento concluido: Reactivación en vivo
-        el.textContent = '00:00 - Reactivada';
-        const camId = el.getAttribute('data-camara-id');
-        const box = document.getElementById(`cooldown-box-${camId}`);
-        if (box) {
-          box.style.opacity = '0';
-          setTimeout(() => box.remove(), 400);
-        }
-        const card = el.closest('.camera-card');
-        if (card) {
-          card.classList.remove('is-cooldown');
-          const badge = card.querySelector('.badge-cooldown');
-          if (badge) {
-            badge.className = 'badge badge-online';
-            badge.innerHTML = 'En Línea';
-          }
-        }
-      }
-    });
-  }
-
-  updateTimers();
-  window._cooldownInterval = setInterval(updateTimers, 1000);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -287,9 +210,9 @@ function initCameraModals() {
   const formEditar      = document.getElementById('editar-camara-form');
   const errorEditar     = document.getElementById('editar-camara-error');
 
-  const cerrarCrear  = () => { modalCrear.classList.remove('active');  formCrear.reset(); };
-  const cerrarToken  = () => { modalToken.classList.remove('active');  };
-  const cerrarEditar = () => { modalEditar.classList.remove('active'); formEditar.reset(); };
+  const cerrarCrear  = () => { modalCrear.classList.remove('active'); modalCrear.classList.remove('open'); formCrear.reset(); };
+  const cerrarToken  = () => { modalToken.classList.remove('active'); modalToken.classList.remove('open'); };
+  const cerrarEditar = () => { modalEditar.classList.remove('active'); modalEditar.classList.remove('open'); formEditar.reset(); };
 
   // Abrir modal de creación
   if (btnNueva) {
@@ -297,6 +220,7 @@ function initCameraModals() {
       formCrear.reset();
       if (errorCrear) errorCrear.style.display = 'none';
       modalCrear.classList.add('active');
+      modalCrear.classList.add('open');
     });
   }
 
@@ -432,7 +356,7 @@ function initCameraModals() {
 // openEditCameraModal — Precarga los datos para edición
 // ─────────────────────────────────────────────────────────────────────────────
 
-async function openEditCameraModal(id) {
+window.openEditCameraModal = async function openEditCameraModal(id) {
   const modal = document.getElementById('editar-camara-modal');
   const error = document.getElementById('editar-camara-error');
   if (!modal) return;
@@ -466,7 +390,7 @@ async function openEditCameraModal(id) {
 // confirmDeleteCamera — Desactiva una cámara con confirmación
 // ─────────────────────────────────────────────────────────────────────────────
 
-async function confirmDeleteCamera(id) {
+window.confirmDeleteCamera = async function confirmDeleteCamera(id) {
   const ok = confirm(`¿Desactivar la Cámara #${id}? Conservará su historial de alertas.`);
   if (!ok) return;
 
@@ -611,19 +535,107 @@ function showToast(message, type = 'error') {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function initGeocoder({ inputId, btnId, latHiddenId, lngHiddenId, previewId, mapaId, coordsId, zonaSelectId, zonaBadgeId }) {
-  const btn     = document.getElementById(btnId);
-  const input   = document.getElementById(inputId);
-  const preview = document.getElementById(previewId);
-  const coords  = document.getElementById(coordsId);
+  const btn        = document.getElementById(btnId);
+  const input      = document.getElementById(inputId);
+  const preview    = document.getElementById(previewId);
+  const coords     = document.getElementById(coordsId);
+  const zonaSelect = document.getElementById(zonaSelectId);
+  const badge      = zonaBadgeId ? document.getElementById(zonaBadgeId) : null;
   if (!btn || !input || !preview) return null;
 
   let leafletMap = null;
   let marker     = null;
 
   function updateHidden(lat, lng) {
-    document.getElementById(latHiddenId).value = lat;
-    document.getElementById(lngHiddenId).value = lng;
+    const latEl = document.getElementById(latHiddenId);
+    const lngEl = document.getElementById(lngHiddenId);
+    if (latEl) latEl.value = lat;
+    if (lngEl) lngEl.value = lng;
     if (coords) coords.textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+  }
+
+  function getSelectedZonaNombre() {
+    if (!zonaSelect || zonaSelect.selectedIndex < 0) return '';
+    const opt = zonaSelect.options[zonaSelect.selectedIndex];
+    if (!opt || !opt.value) return '';
+    return opt.text.trim();
+  }
+
+  function updateBtnState() {
+    if (!zonaSelect) return;
+    const hasZona = !!zonaSelect.value;
+    if (!hasZona) {
+      btn.disabled = true;
+      btn.title = 'Seleccioná primero la Zona arriba para poder localizar';
+      btn.style.opacity = '0.55';
+      btn.style.cursor = 'not-allowed';
+    } else {
+      btn.disabled = false;
+      const zonaNombre = getSelectedZonaNombre();
+      btn.title = `Localizar dirección en ${zonaNombre}, Vicente López`;
+      btn.style.opacity = '';
+      btn.style.cursor = '';
+    }
+  }
+
+  if (zonaSelect) {
+    zonaSelect.addEventListener('change', () => {
+      updateBtnState();
+      const zonaNombre = getSelectedZonaNombre();
+      if (zonaNombre && badge && !preview.classList.contains('hidden')) {
+        badge.textContent = `📍 Zona: ${zonaNombre} (Vicente López)`;
+        badge.style.color = 'var(--accent-teal)';
+      }
+    });
+    // Estado inicial
+    updateBtnState();
+  }
+
+  // Coordenadas perimetrales oficiales del Partido de Vicente López
+  const VL_VIEWBOX = '-58.5537,-34.4897,-58.4595,-34.5692';
+
+  const ZONA_KEYWORDS = {
+    '1': ['centro', 'vicente lópez'],
+    '2': ['olivos'],
+    '3': ['la lucila', 'lucila'],
+    '4': ['munro'],
+    '5': ['villa martelli', 'martelli'],
+    '6': ['florida', 'florida oeste', 'las flores'],
+    '7': ['carapachay']
+  };
+
+  function scoreCandidate(item, zonaId) {
+    let score = 0;
+    // 1. Coincidencia exacta de altura / numeración (place/house o building)
+    if (item.class === 'place' || item.type === 'house' || item.class === 'building') {
+      score += 50;
+    }
+    // 2. Pertenece al Partido de Vicente López
+    const district = (item.address?.state_district || item.address?.county || '').toLowerCase();
+    const display = (item.display_name || '').toLowerCase();
+    if (district.includes('vicente lópez') || display.includes('vicente lópez')) {
+      score += 30;
+    }
+    // 3. Coincidencia con la zona elegida por el usuario
+    const kws = ZONA_KEYWORDS[zonaId] || [];
+    const itemText = (display + ' ' + (item.address?.suburb || '') + ' ' + (item.address?.neighbourhood || '')).toLowerCase();
+    for (const kw of kws) {
+      if (itemText.includes(kw)) {
+        score += 40;
+        break;
+      }
+    }
+    return score;
+  }
+
+  async function fetchOsm(q) {
+    try {
+      const url = `https://nominatim.openstreetmap.org/search?format=json&limit=5&addressdetails=1&q=${encodeURIComponent(q)}&viewbox=${VL_VIEWBOX}&bounded=1`;
+      const resp = await fetch(url, { headers: { 'Accept-Language': 'es' } });
+      return await resp.json();
+    } catch (e) {
+      return [];
+    }
   }
 
   function showMap(lat, lng) {
@@ -637,28 +649,30 @@ function initGeocoder({ inputId, btnId, latHiddenId, lngHiddenId, previewId, map
       }).addTo(leafletMap);
     }
 
-    if (marker) { marker.setLatLng([lat, lng]); }
-    else {
+    if (marker) {
+      marker.setLatLng([lat, lng]);
+    } else {
       marker = L.marker([lat, lng], { draggable: true }).addTo(leafletMap);
       marker.on('dragend', async () => {
         const pos = marker.getLatLng();
         updateHidden(pos.lat, pos.lng);
 
-        // Geocodificación inversa: actualizar dirección y zona al mover el pin
+        // Geocodificación inversa: actualizar dirección si es posible, sin alterar la zona
         try {
           const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.lat}&lon=${pos.lng}&addressdetails=1`;
           const resp = await fetch(url, { headers: { 'Accept-Language': 'es' } });
           const data = await resp.json();
           if (data && data.address) {
             const a = data.address;
-            const partes = [
-              a.road,
-              a.house_number,
-              a.suburb || a.neighbourhood || a.city_district,
-              a.city   || a.town          || a.municipality
-            ].filter(Boolean);
-            input.value = partes.join(', ') || data.display_name || input.value;
-            autoSetZona(data.address, zonaSelectId, zonaBadgeId);
+            const calleNum = [a.road, a.house_number].filter(Boolean).join(' ');
+            const barrio = a.suburb || a.neighbourhood || a.city_district || getSelectedZonaNombre();
+            if (calleNum) {
+              input.value = `${calleNum}, ${barrio}`;
+            }
+            if (badge) {
+              badge.textContent = `📍 ${calleNum || 'Ubicación'} (${barrio}, Vicente López)`;
+              badge.style.color = 'var(--accent-teal)';
+            }
           }
         } catch (e) {
           console.warn('[TrashFlow] Reverse geocode error al arrastrar pin:', e);
@@ -667,125 +681,110 @@ function initGeocoder({ inputId, btnId, latHiddenId, lngHiddenId, previewId, map
     }
 
     leafletMap.setView([lat, lng], 16);
-    // Leaflet necesita que el contenedor esté visible para calcular el tamaño
     setTimeout(() => leafletMap.invalidateSize(), 120);
     updateHidden(lat, lng);
   }
 
   btn.addEventListener('click', async () => {
     const direccion = input.value.trim();
-    if (!direccion) { input.focus(); return; }
+    if (!direccion) {
+      input.focus();
+      showToast('Escribí una calle y altura (ej: Roma 211, Urquiza 4341).', 'info');
+      return;
+    }
+
+    if (!zonaSelect || !zonaSelect.value) {
+      showToast('Por favor, seleccioná primero la Zona para ubicar la dirección dentro del municipio.', 'warning');
+      zonaSelect?.focus();
+      return;
+    }
+
+    const zonaId = zonaSelect.value;
+    const zonaNombre = getSelectedZonaNombre();
 
     btn.classList.add('loading');
     btn.disabled = true;
 
     try {
-      // addressdetails=1 devuelve el desglose del domicilio (barrio, localidad, etc.)
-      const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&addressdetails=1&q=${encodeURIComponent(direccion)}`;
-      const resp = await fetch(url, { headers: { 'Accept-Language': 'es' } });
-      const results = await resp.json();
+      // Estrategia de búsqueda inteligente:
+      // 1. Buscar la dirección tal cual, acotada estrictamente a Vicente López
+      let results = await fetchOsm(direccion);
+
+      // 2. Si no hubo resultados, intentar con Partido de Vicente López
+      if (!results || results.length === 0) {
+        results = await fetchOsm(`${direccion}, Partido de Vicente López`);
+      }
+
+      // 3. Si aún no hay resultados, intentar con el nombre de la zona
+      if (!results || results.length === 0) {
+        results = await fetchOsm(`${direccion}, ${zonaNombre}`);
+      }
 
       if (!results || results.length === 0) {
-        showToast('No se encontró la dirección. Intentá ser más específico (incluí ciudad y provincia).', 'warning');
+        showToast(`No se encontró "${direccion}" en ${zonaNombre}, Vicente López. Verificá la calle y altura.`, 'warning');
         return;
       }
 
-      const { lat, lon, address } = results[0];
-      showMap(parseFloat(lat), parseFloat(lon));
+      // Ordenar resultados por relevancia y compatibilidad con la Zona elegida
+      results.sort((a, b) => scoreCandidate(b, zonaId) - scoreCandidate(a, zonaId));
+      const best = results[0];
 
-      if (address) {
-        autoSetZona(address, zonaSelectId, zonaBadgeId);
+      const parsedLat = parseFloat(best.lat);
+      const parsedLon = parseFloat(best.lon);
+
+      showMap(parsedLat, parsedLon);
+
+      // Extraer datos legibles del domicilio encontrado
+      const addr = best.address || {};
+      const calle = addr.road || '';
+      const num = addr.house_number || '';
+      const calleYNum = calle ? (num ? `${calle} ${num}` : calle) : direccion;
+      const barrio = addr.suburb || addr.neighbourhood || zonaNombre;
+
+      // Actualizar el texto del input con la dirección normalizada si se encontró la numeración
+      if (calle && num) {
+        input.value = `${calle} ${num}, ${barrio}`;
       }
+
+      if (badge) {
+        badge.textContent = `📍 ${calleYNum} (${barrio}, Vicente López)`;
+        badge.style.color = 'var(--accent-teal)';
+      }
+      showToast(`Ubicación encontrada: ${calleYNum} (${barrio})`, 'success');
+
     } catch (e) {
       console.error('Error al geocodificar:', e);
-      showToast('No se pudo obtener la ubicación. Verificá tu conexión a internet.', 'error');
+      showToast('No se pudo conectar al servicio de mapas. Verificá tu conexión.', 'error');
     } finally {
       btn.classList.remove('loading');
-      btn.disabled = false;
+      updateBtnState();
     }
   });
 
-  // Reset: limpia el mapa y desbloquea el select de zona
+  // Reset: limpia el mapa y restaura el estado del botón
   input.closest('form')?.addEventListener('reset', () => {
     preview.classList.add('hidden');
-    document.getElementById(latHiddenId).value = '';
-    document.getElementById(lngHiddenId).value = '';
+    const latEl = document.getElementById(latHiddenId);
+    const lngEl = document.getElementById(lngHiddenId);
+    if (latEl) latEl.value = '';
+    if (lngEl) lngEl.value = '';
     if (coords) coords.textContent = '';
     if (marker) { marker.remove(); marker = null; }
-    // Restaurar el select de zona a editable y vacío
-    const zonaSelect = document.getElementById(zonaSelectId);
-    if (zonaSelect) {
-      zonaSelect.value = '';
-      zonaSelect.style.pointerEvents = '';
-      zonaSelect.style.opacity = '';
-      zonaSelect.title = '';
-    }
-    const badge = badgeId ? document.getElementById(badgeId) : null;
     if (badge) badge.textContent = '';
+    setTimeout(updateBtnState, 50);
   });
 
   return {
     // Precarga de coordenadas desde fuera (usado al abrir modal editar)
-    setLocation(lat, lng) { showMap(lat, lng); }
-  };
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// autoSetZona — Detecta la zona a partir del address object de Nominatim
-// y la selecciona automáticamente en el <select> indicado.
-// ─────────────────────────────────────────────────────────────────────────────
-
-function autoSetZona(address, selectId, badgeId) {
-  const zonaMap = [
-    { id: '1', nombre: 'Centro',         keywords: ['centro', 'vicente lópez centro'] },
-    { id: '2', nombre: 'Olivos',         keywords: ['olivos'] },
-    { id: '3', nombre: 'La Lucila',      keywords: ['la lucila', 'lucila'] },
-    { id: '4', nombre: 'Munro',          keywords: ['munro'] },
-    { id: '5', nombre: 'Villa Martelli', keywords: ['villa martelli', 'martelli'] },
-    { id: '6', nombre: 'Florida',        keywords: ['florida'] },
-    { id: '7', nombre: 'Carapachay',     keywords: ['carapachay'] }
-  ];
-
-  const candidatos = [
-    address.suburb,
-    address.neighbourhood,
-    address.city_district,
-    address.quarter,
-    address.village,
-    address.town,
-    address.county
-  ].filter(Boolean).map(s => s.toLowerCase());
-
-  const select = document.getElementById(selectId);
-  const badge  = badgeId ? document.getElementById(badgeId) : null;
-  if (!select) return;
-
-  for (const candidato of candidatos) {
-    for (const zona of zonaMap) {
-      if (zona.keywords.some(kw => candidato.includes(kw))) {
-        // ── Zona detectada: asignar y bloquear el select ──
-        select.value = zona.id;
-        select.style.pointerEvents = 'none';
-        select.style.opacity = '0.75';
-        select.title = 'Zona detectada automáticamente según la dirección. Relocalizá para cambiarla.';
-        if (badge) {
-          badge.textContent = `✅ Zona detectada: ${zona.nombre}`;
-          badge.style.color = 'var(--accent-teal)';
-        }
-        console.log(`[TrashFlow] Zona autodetectada: "${candidato}" → ${zona.nombre}`);
-        return;
+    setLocation(lat, lng) {
+      showMap(lat, lng);
+      updateBtnState();
+      const zonaNombre = getSelectedZonaNombre();
+      if (zonaNombre && badge) {
+        badge.textContent = `📍 Zona: ${zonaNombre} (Vicente López)`;
+        badge.style.color = 'var(--accent-teal)';
       }
-    }
-  }
-
-  // ── Zona NO detectada: dejar el select libre para selección manual ──
-  select.value = '';
-  select.style.pointerEvents = '';
-  select.style.opacity = '';
-  select.title = '';
-  if (badge) {
-    badge.textContent = '⚠️ Zona no detectada — seleccioná manualmente';
-    badge.style.color = 'var(--color-warning, orange)';
-  }
-  console.log('[TrashFlow] Zona no detectada automáticamente. Campos recibidos:', candidatos);
+    },
+    updateBtnState
+  };
 }
