@@ -38,24 +38,48 @@ def simular_alerta():
         with conexion.cursor() as cursor:
             confianza = round(random.uniform(85.0, 98.0), 2)
 
-            # 1. Crear la alerta (estado_id=2 = "asignada")
+            # 1. Si la cámara tenía una alerta activa previa, cerrarla por re-detección
+            cursor.execute(
+                """
+                UPDATE alertas
+                SET estado_id = 4, resuelto_en = NOW(),
+                    notas_admin = CASE
+                        WHEN notas_admin IS NULL OR notas_admin = '' THEN 'Cerrada: re-detectada en simulación tras suspensión'
+                        ELSE CONCAT(notas_admin, ' | Cerrada: re-detectada en simulación tras suspensión')
+                    END
+                WHERE camara_id = %s AND estado_id IN (1, 2, 3)
+                """,
+                (CAMARA_ID,)
+            )
+
+            # 2. Crear la alerta (estado_id=2 = "asignada") con detectado_en actual
             cursor.execute(
                 """
                 INSERT INTO alertas
                     (camara_id, zona_id, estado_id, operador_id, confianza,
-                     foto_url, latitud, longitud, direccion, asignado_en)
-                VALUES (%s, %s, 2, %s, %s, 'test.jpg', %s, %s, %s, NOW())
+                     foto_url, latitud, longitud, direccion, detectado_en, asignado_en, creado_en)
+                VALUES (%s, %s, 2, %s, %s, 'test.jpg', %s, %s, %s, NOW(), NOW(), NOW())
                 """,
                 (CAMARA_ID, ZONA_ID, OPERADOR_ID, confianza, LATITUD, LONGITUD, DIRECCION)
             )
             alerta_id = cursor.lastrowid
 
-            # 2. Crear la notificación que el ESP32 va a leer por polling
+            # 3. Actualizar la cámara para que registre la última detección
+            cursor.execute(
+                """
+                UPDATE camaras
+                SET total_detecciones = total_detecciones + 1, ultima_conexion = NOW()
+                WHERE id = %s
+                """,
+                (CAMARA_ID,)
+            )
+
+            # 4. Crear la notificación que el ESP32 va a leer por polling
             cursor.execute(
                 """
                 INSERT INTO notificaciones
-                    (usuario_id, alerta_id, titulo, mensaje, tipo, leida)
-                VALUES (%s, %s, %s, %s, 'alerta_asignada', 0)
+                    (usuario_id, alerta_id, titulo, mensaje, tipo, leida, creado_en)
+                VALUES (%s, %s, %s, %s, 'alerta_asignada', 0, NOW())
                 """,
                 (
                     OPERADOR_ID,

@@ -35,6 +35,20 @@ async function initDashboard() {
       loadCharts(),
       loadRecentAlerts()
     ]);
+
+    // Auto-refresco en segundo plano cada 30 segundos
+    if (!window._dashboardInterval) {
+      window._dashboardInterval = setInterval(async () => {
+        try {
+          await Promise.all([
+            loadKPIs(),
+            loadRecentAlerts()
+          ]);
+        } catch (e) {
+          console.warn('[Dashboard Auto-Refresh Warning]:', e);
+        }
+      }, 30000);
+    }
   } catch (error) {
     console.error('Error al inicializar el panel principal:', error);
     showDashboardError();

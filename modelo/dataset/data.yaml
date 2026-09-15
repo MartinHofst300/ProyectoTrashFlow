@@ -1,5 +1,13 @@
-train: C:\xampp\htdocs\dashboard\TrashFlow-PRESENTACION\modelo\dataset\train\images
-val: C:\xampp\htdocs\dashboard\TrashFlow-PRESENTACION\modelo\dataset\valid\images
-test: C:\xampp\htdocs\dashboard\TrashFlow-PRESENTACION\modelo\dataset\test\images
+train: train/images
+val: valid/images
+test: test/images
+
 nc: 1
 names: ['Garbage']
+
+roboflow:
+  workspace: martins-workspace-i7pjj
+  project: basura-uf3ly-liw2l
+  version: 2
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/martins-workspace-i7pjj/basura-uf3ly-liw2l/dataset/2

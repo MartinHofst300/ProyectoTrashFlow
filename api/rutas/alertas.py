@@ -29,6 +29,117 @@ from api.servicios.email_service import send_alerta_nueva, send_alerta_asignada
 alertas_bp = Blueprint('alertas', __name__)
 
 
+def auto_resolver_alertas_expiradas():
+    """
+    TrashFlow — Resolución automática de alertas tras 30 minutos sin re-detección.
+
+    Regla de negocio:
+    Cuando una cámara detecta una bolsa de basura, entra en suspensión/cooldown por 30 minutos.
+    Si transcurren esos 30 minutos desde la detección (detectado_en <= NOW() - INTERVAL 30 MINUTE)
+    y NO se detectó otra vez (no existe una detección posterior para esa misma cámara),
+    la alerta se marca automáticamente como 'resuelta' (estado_id = 4).
+    Si hubo una detección posterior para la misma cámara, las alertas previas se cierran
+    indicando que fueron superadas por la re-detección.
+    """
+    try:
+        alertas_vencidas = query(
+            """
+            SELECT a.id, a.camara_id, a.direccion, a.detectado_en, a.operador_id
+            FROM alertas a
+            WHERE a.estado_id IN (1, 2, 3)
+              AND a.detectado_en <= NOW() - INTERVAL 30 MINUTE
+            ORDER BY a.detectado_en ASC
+            """
+        )
+
+        if not alertas_vencidas:
+            return 0
+
+        resueltas = 0
+        for al in alertas_vencidas:
+            alerta_id = al['id']
+            camara_id = al['camara_id']
+            detectado_en = al['detectado_en']
+            direccion = al.get('direccion') or f"Cámara #{camara_id}"
+
+            # Verificar si hubo una re-detección posterior para esta cámara
+            re_deteccion = query(
+                """
+                SELECT id FROM alertas
+                WHERE camara_id = %s
+                  AND detectado_en > %s
+                LIMIT 1
+                """,
+                (camara_id, detectado_en)
+            )
+
+            if re_deteccion:
+                nota = "Cerrada: re-detectada en reporte posterior para la misma cámara"
+            else:
+                nota = "Resuelta automáticamente: transcurrieron 30 minutos sin reincidencia de detección"
+
+            # Actualizar a estado 4 (resuelta)
+            query(
+                """
+                UPDATE alertas
+                SET estado_id = 4,
+                    resuelto_en = COALESCE(resuelto_en, NOW()),
+                    notas_admin = CASE 
+                        WHEN notas_admin IS NULL OR notas_admin = '' THEN %s
+                        ELSE CONCAT(notas_admin, ' | ', %s)
+                    END
+                WHERE id = %s
+                """,
+                (nota, nota, alerta_id)
+            )
+
+            # Historial de auditoría
+            query(
+                """
+                INSERT INTO historial_alertas (alerta_id, usuario_id, estado_id, notas, creado_en)
+                VALUES (%s, NULL, 4, %s, NOW())
+                """,
+                (alerta_id, nota)
+            )
+
+            # Notificación interna
+            query(
+                """
+                INSERT INTO notificaciones (usuario_id, alerta_id, titulo, mensaje, tipo, leida, creado_en)
+                VALUES (1, %s, 'Alerta Resuelta Automáticamente', %s, 'alerta_resuelta', 0, NOW())
+                """,
+                (
+                    alerta_id,
+                    f"La alerta #{alerta_id} en {direccion} ha sido marcada como resuelta tras 30 min sin re-detección."
+                )
+            )
+            resueltas += 1
+
+        if resueltas > 0:
+            print(f"[Auto-Resolución] {resueltas} alerta(s) marcada(s) como resuelta(s) tras 30 min sin re-detección.")
+        return resueltas
+    except Exception as e:
+        print(f"[Auto-Resolución Error] {e}")
+        return 0
+
+
+@alertas_bp.route('/alertas/verificar-expiradas', methods=['GET', 'POST'])
+def check_expired_alerts():
+    """
+    GET / POST /api/alertas/verificar-expiradas
+    
+    Verifica y resuelve de inmediato todas las alertas que hayan superado
+    los 30 minutos de suspensión sin re-detección.
+    Puede ser invocado por el frontend (polling/ticker) o por scripts.
+    """
+    resueltas = auto_resolver_alertas_expiradas()
+    return jsonify({
+        "ok": True,
+        "resueltas": resueltas,
+        "mensaje": f"{resueltas} alerta(s) resuelta(s) automáticamente"
+    }), 200
+
+
 def auto_asignar_operario(alerta_id, zona_id):
     """
     Asigna automáticamente el operario más disponible de la misma zona geográfica.
@@ -213,6 +324,21 @@ def receive_detection():
     # 5. Inserción de la Alerta en MySQL
     zona_id = camara['zona_id']
     try:
+        # Si la cámara ya tenía una alerta activa previa (pendiente, asignada, en_proceso),
+        # se marca como superada por esta nueva re-detección tras el período de suspensión
+        query(
+            """
+            UPDATE alertas
+            SET estado_id = 4, resuelto_en = NOW(),
+                notas_admin = CASE
+                    WHEN notas_admin IS NULL OR notas_admin = '' THEN 'Cerrada: re-detectada en nueva alerta tras suspensión'
+                    ELSE CONCAT(notas_admin, ' | Cerrada: re-detectada en nueva alerta tras suspensión')
+                END
+            WHERE camara_id = %s AND estado_id IN (1, 2, 3)
+            """,
+            (camara_id,)
+        )
+
         # Registra la alerta en la base de datos
         alerta_id = query(
             """
@@ -314,6 +440,9 @@ def get_alerts():
     if claims.get("rol") != "admin":
         return jsonify({"error": "No autorizado", "mensaje": "Se requieren privilegios de administrador"}), 403
 
+    # Resuelve automáticamente alertas que superaron los 30 minutos de suspensión sin re-detección
+    auto_resolver_alertas_expiradas()
+
     # Parámetros de filtrado
     zona = request.args.get('zona')
     estado = request.args.get('estado')
@@ -413,6 +542,9 @@ def get_alert_detail(alerta_id):
     claims = get_jwt()
     if claims.get("rol") != "admin":
         return jsonify({"error": "No autorizado", "mensaje": "Se requieren privilegios de administrador"}), 403
+
+    # Resuelve automáticamente alertas expiradas antes de devolver el detalle
+    auto_resolver_alertas_expiradas()
 
     try:
         alertas = query("SELECT * FROM vista_alertas_completa WHERE id = %s", (alerta_id,))
@@ -675,6 +807,20 @@ def demo_detection():
 
         # Usar foto placeholder para la demo
         foto_url = "static/fotos/placeholder_sin_evidencia.jpg"
+
+        # Si la cámara ya tenía una alerta activa previa, cerrarla por re-detección
+        query(
+            """
+            UPDATE alertas
+            SET estado_id = 4, resuelto_en = NOW(),
+                notas_admin = CASE
+                    WHEN notas_admin IS NULL OR notas_admin = '' THEN 'Cerrada: re-detectada en demo tras suspensión'
+                    ELSE CONCAT(notas_admin, ' | Cerrada: re-detectada en demo tras suspensión')
+                END
+            WHERE camara_id = %s AND estado_id IN (1, 2, 3)
+            """,
+            (camara_id,)
+        )
 
         # Insertar la alerta en la BD (idéntico al flujo real de la cámara)
         alerta_id = query(

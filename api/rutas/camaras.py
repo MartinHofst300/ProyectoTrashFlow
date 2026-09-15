@@ -49,12 +49,17 @@ def get_camaras():
         return jsonify({"error": "No autorizado", "mensaje": "Se requieren privilegios de administrador"}), 403
 
     try:
+        from api.rutas.alertas import auto_resolver_alertas_expiradas
+        auto_resolver_alertas_expiradas()
+
         camaras = query(
             """
             SELECT c.id, c.nombre, c.descripcion, c.ubicacion, c.latitud, c.longitud,
                    c.ip_stream, c.token_api, c.estado, c.ultima_conexion,
                    (SELECT COUNT(*) FROM alertas a WHERE a.camara_id = c.id) AS total_detecciones,
                    (SELECT MAX(detectado_en) FROM alertas a WHERE a.camara_id = c.id) AS ultima_alerta,
+                   (SELECT MAX(detectado_en) FROM alertas a WHERE a.camara_id = c.id AND a.estado_id IN (1, 2, 3)) AS ultima_alerta_activa,
+                   (SELECT ea.nombre FROM alertas a JOIN estados_alerta ea ON a.estado_id = ea.id WHERE a.camara_id = c.id ORDER BY a.detectado_en DESC LIMIT 1) AS ultima_alerta_estado,
                    c.activa, c.zona_id
             FROM camaras c
             WHERE c.activa = 1
@@ -62,13 +67,31 @@ def get_camaras():
             """
         )
 
+        import datetime
+        ahora = datetime.datetime.now()
+
         for c in camaras:
             if c['latitud']  is not None: c['latitud']  = float(c['latitud'])
             if c['longitud'] is not None: c['longitud'] = float(c['longitud'])
             if c['ultima_conexion'] is not None:
                 c['ultima_conexion'] = c['ultima_conexion'].strftime('%Y-%m-%d %H:%M:%S')
+            
+            ultima_activa_dt = c.get('ultima_alerta_activa')
+            is_cooldown = False
+            cooldown_restante = 0
+            if ultima_activa_dt:
+                diff_sec = (ahora - ultima_activa_dt).total_seconds()
+                if 0 <= diff_sec < 1800:
+                    is_cooldown = True
+                    cooldown_restante = int(1800 - diff_sec)
+
+            c['is_cooldown'] = is_cooldown
+            c['cooldown_restante_seg'] = cooldown_restante
+
             if c.get('ultima_alerta') is not None:
                 c['ultima_alerta'] = c['ultima_alerta'].strftime('%Y-%m-%d %H:%M:%S')
+            if c.get('ultima_alerta_activa') is not None:
+                c['ultima_alerta_activa'] = c['ultima_alerta_activa'].strftime('%Y-%m-%d %H:%M:%S')
 
         return jsonify(camaras), 200
     except Exception as e:
@@ -93,12 +116,17 @@ def get_camara_detail(camara_id):
         return jsonify({"error": "No autorizado", "mensaje": "Se requieren privilegios de administrador"}), 403
 
     try:
+        from api.rutas.alertas import auto_resolver_alertas_expiradas
+        auto_resolver_alertas_expiradas()
+
         camaras = query(
             """
             SELECT c.id, c.nombre, c.descripcion, c.ubicacion, c.latitud, c.longitud,
                    c.ip_stream, c.token_api, c.estado, c.ultima_conexion,
                    (SELECT COUNT(*) FROM alertas a WHERE a.camara_id = c.id) AS total_detecciones,
                    (SELECT MAX(detectado_en) FROM alertas a WHERE a.camara_id = c.id) AS ultima_alerta,
+                   (SELECT MAX(detectado_en) FROM alertas a WHERE a.camara_id = c.id AND a.estado_id IN (1, 2, 3)) AS ultima_alerta_activa,
+                   (SELECT ea.nombre FROM alertas a JOIN estados_alerta ea ON a.estado_id = ea.id WHERE a.camara_id = c.id ORDER BY a.detectado_en DESC LIMIT 1) AS ultima_alerta_estado,
                    c.activa, c.zona_id
             FROM camaras c
             WHERE c.id = %s
@@ -109,13 +137,31 @@ def get_camara_detail(camara_id):
         if not camaras:
             return jsonify({"error": "No encontrado", "mensaje": f"Cámara con ID {camara_id} no encontrada"}), 404
 
+        import datetime
+        ahora = datetime.datetime.now()
+
         c = camaras[0]
         if c['latitud']  is not None: c['latitud']  = float(c['latitud'])
         if c['longitud'] is not None: c['longitud'] = float(c['longitud'])
         if c['ultima_conexion'] is not None:
             c['ultima_conexion'] = c['ultima_conexion'].strftime('%Y-%m-%d %H:%M:%S')
+
+        ultima_activa_dt = c.get('ultima_alerta_activa')
+        is_cooldown = False
+        cooldown_restante = 0
+        if ultima_activa_dt:
+            diff_sec = (ahora - ultima_activa_dt).total_seconds()
+            if 0 <= diff_sec < 1800:
+                is_cooldown = True
+                cooldown_restante = int(1800 - diff_sec)
+
+        c['is_cooldown'] = is_cooldown
+        c['cooldown_restante_seg'] = cooldown_restante
+
         if c.get('ultima_alerta') is not None:
             c['ultima_alerta'] = c['ultima_alerta'].strftime('%Y-%m-%d %H:%M:%S')
+        if c.get('ultima_alerta_activa') is not None:
+            c['ultima_alerta_activa'] = c['ultima_alerta_activa'].strftime('%Y-%m-%d %H:%M:%S')
 
         return jsonify(c), 200
     except Exception as e:

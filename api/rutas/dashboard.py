@@ -36,6 +36,9 @@ def get_reports_stats():
     if claims.get("rol") != "admin":
         return jsonify({"error": "No autorizado", "mensaje": "Se requieren privilegios de administrador"}), 403
 
+    from api.rutas.alertas import auto_resolver_alertas_expiradas
+    auto_resolver_alertas_expiradas()
+
     desde = request.args.get('desde')
     hasta = request.args.get('hasta')
     zona_id = request.args.get('zona_id')
@@ -249,6 +252,9 @@ def get_dashboard_today():
     claims = get_jwt()
     if claims.get("rol") != "admin":
         return jsonify({"error": "No autorizado", "mensaje": "Se requieren privilegios de administrador"}), 403
+
+    from api.rutas.alertas import auto_resolver_alertas_expiradas
+    auto_resolver_alertas_expiradas()
 
     try:
         # 1. Obtiene métricas acumuladas desde la vista de base de datos

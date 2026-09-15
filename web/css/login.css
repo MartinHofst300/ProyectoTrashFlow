@@ -117,6 +117,7 @@
 }
 
 .login-btn {
+  margin-top: var(--spacing-sm);
   padding: 12px;
   font-size: 15px;
   background-color: var(--color-accent-teal);

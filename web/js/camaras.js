@@ -38,6 +38,20 @@ document.addEventListener('DOMContentLoaded', () => {
     zonaSelectId:'edit-cam-zona',
     zonaBadgeId: 'edit-cam-zona-badge'
   });
+
+  // Auto-refresco de cámaras cada 30 segundos
+  setInterval(() => {
+    // Solo recargar si no hay modales abiertos
+    const modalCrear = document.getElementById('camara-modal');
+    const modalEdit  = document.getElementById('editar-camara-modal');
+    const modalToken = document.getElementById('token-modal');
+    const isOpen = (modalCrear?.classList.contains('active')) ||
+                   (modalEdit?.classList.contains('active')) ||
+                   (modalToken?.classList.contains('active'));
+    if (!isOpen) {
+      loadCameras();
+    }
+  }, 30000);
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -74,15 +88,34 @@ async function loadCameras() {
     data.forEach(camara => {
       const card = document.createElement('div');
       
-      card.className = 'card camera-card';
+      // ── Comprobación de Cooldown (30 min tras última alerta activa) ──
+      let isCooldown = false;
+      let cooldownEndTime = 0;
 
-      // ── Estado: usar el campo estado de la DB + umbral de 90s ──
+      if (camara.is_cooldown && camara.cooldown_restante_seg > 0) {
+        isCooldown = true;
+        cooldownEndTime = Date.now() + (camara.cooldown_restante_seg * 1000);
+      } else if (camara.ultima_alerta_activa) {
+        const alertTime = new Date(camara.ultima_alerta_activa.replace(/-/g, '/')).getTime();
+        const diffMs = Date.now() - alertTime;
+        if (diffMs >= 0 && diffMs < COOLDOWN_DURATION_MS) {
+          isCooldown = true;
+          cooldownEndTime = alertTime + COOLDOWN_DURATION_MS;
+        }
+      }
+
+      card.className = `card camera-card ${isCooldown ? 'is-cooldown' : ''}`;
+
+      // ── Estado: usar el campo estado de la DB + cooldown + umbral de 90s ──
       let badgeClass = 'badge-offline';
       let badgeHtml  = 'Desconectado';
 
       if (camara.estado === 'mantenimiento') {
         badgeClass = 'badge-mantenimiento';
         badgeHtml  = 'Mantenimiento';
+      } else if (isCooldown) {
+        badgeClass = 'badge-cooldown';
+        badgeHtml  = '<span class="cooldown-dot"></span>Pausada (30m)';
       } else if (camara.estado === 'online' && camara.ultima_conexion) {
         // Umbral: 90 segundos (3 ciclos de heartbeat de 30s)
         const lastConn   = new Date(camara.ultima_conexion.replace(/-/g, '/'));
@@ -96,6 +129,25 @@ async function loadCameras() {
       const ultimaConexion = camara.ultima_conexion
         ? formatDateTime(camara.ultima_conexion)
         : 'Nunca conectado';
+
+      const cooldownBoxHtml = isCooldown ? `
+        <div class="camera-cooldown-box" id="cooldown-box-${camara.id}">
+          <div class="cooldown-box-header">
+            <span>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              Pausa anti-sobrecarga (30m)
+            </span>
+            <span style="font-size: 10.5px; opacity: 0.85;">Alerta reciente</span>
+          </div>
+          <div class="cooldown-box-timer">
+            <span class="cooldown-label">Reactivación en:</span>
+            <span class="cooldown-digits cooldown-countdown" data-camara-id="${camara.id}" data-target-time="${cooldownEndTime}">--:--</span>
+          </div>
+        </div>
+      ` : '';
 
       card.innerHTML = `
         <div class="camera-card-header">
@@ -124,6 +176,8 @@ async function loadCameras() {
             <span class="stat-value" title="${camara.ultima_conexion || ''}">${ultimaConexion}</span>
           </div>
         </div>
+
+        ${cooldownBoxHtml}
 
         <div class="camera-card-actions" style="margin-top: 15px; display: flex; gap: 8px; justify-content: flex-end;">
           <a href="alertas.html?camara_id=${camara.id}"
@@ -182,6 +236,56 @@ function initCooldownTicker() {
     clearInterval(window._cooldownInterval);
     window._cooldownInterval = null;
   }
+
+  function updateTimers() {
+    const countdownEls = document.querySelectorAll('.cooldown-countdown');
+    const now = Date.now();
+    let hasActiveCooldowns = false;
+
+    countdownEls.forEach(el => {
+      const target = parseInt(el.getAttribute('data-target-time'), 10);
+      if (!target) return;
+
+      const diff = target - now;
+      if (diff > 0) {
+        hasActiveCooldowns = true;
+        const totalSecs = Math.floor(diff / 1000);
+        const mins = Math.floor(totalSecs / 60);
+        const secs = totalSecs % 60;
+        el.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+      } else {
+        // Enfriamiento concluido: Reactivación en vivo
+        el.textContent = '00:00 — Reactivada';
+        const camId = el.getAttribute('data-camara-id');
+        const box = document.getElementById(`cooldown-box-${camId}`);
+        if (box) {
+          box.style.opacity = '0';
+          setTimeout(() => box?.remove(), 500);
+        }
+        const card = el.closest('.camera-card');
+        if (card) {
+          card.classList.remove('is-cooldown');
+          const badge = card.querySelector('.badge-cooldown');
+          if (badge) {
+            badge.className = 'badge badge-online';
+            badge.innerHTML = 'En Línea';
+          }
+        }
+        // Llamar a la API para verificar y asegurar auto-resolución de alertas
+        requestAPI('/api/alertas/verificar-expiradas', { method: 'POST' }).catch(() => {});
+      }
+    });
+
+    if (!hasActiveCooldowns && countdownEls.length === 0) {
+      if (window._cooldownInterval) {
+        clearInterval(window._cooldownInterval);
+        window._cooldownInterval = null;
+      }
+    }
+  }
+
+  updateTimers();
+  window._cooldownInterval = setInterval(updateTimers, 1000);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

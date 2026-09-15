@@ -75,6 +75,17 @@ async function initAlertsPage() {
       loadAlertas();
     });
   }
+
+  // Auto-refresco de alertas cada 30 segundos (evita recargar si un modal está interactivo)
+  setInterval(() => {
+    const modalAsignar = document.getElementById('asignar-operador-modal');
+    const modalFoto    = document.getElementById('photo-modal');
+    const modalAbierto = (modalAsignar && modalAsignar.classList.contains('active')) ||
+                         (modalFoto && modalFoto.classList.contains('active'));
+    if (!modalAbierto) {
+      loadAlertas();
+    }
+  }, 30000);
 }
 
 
@@ -165,12 +176,46 @@ async function loadAlertas() {
       descartada: { label: 'Descartada', badgeClass: 'badge-descartada' }
     };
 
+    const thirtyMinMs = 30 * 60 * 1000;
+    const nowMs = Date.now();
+
     // Renderiza cada fila de alerta
     data.alertas.forEach(alert => {
-      const stateObj = statesMap[alert.estado] || { label: alert.estado, badgeClass: 'badge-descartada' };
+      let stateObj = statesMap[alert.estado] || { label: alert.estado, badgeClass: 'badge-descartada' };
       const formattedDate = formatDateTime(alert.fecha);
       const operatorHtml = getOperatorDisplay(alert.operador, alert.id, alert.estado);
       const actionHtml = getActionHtml(alert.operador, alert.id, alert.estado);
+
+      // Comprobación de ventana de 30 minutos de suspensión de cámara
+      const alertTime = alert.fecha ? new Date(alert.fecha.replace(/-/g, '/')).getTime() : 0;
+      const diffMs = alertTime ? (nowMs - alertTime) : 0;
+      let suspensionHtml = '';
+
+      if (alert.estado === 'resuelta') {
+        stateObj = { label: 'Resuelta', badgeClass: 'badge-resuelta' };
+      } else if (alert.estado !== 'descartada') {
+        if (diffMs >= thirtyMinMs) {
+          // Ya transcurrieron los 30 minutos sin re-detección: aparece resuelta
+          stateObj = { label: 'Resuelta', badgeClass: 'badge-resuelta' };
+          suspensionHtml = `
+            <div style="font-size: 11px; color: var(--color-success, #2ECC71); margin-top: 4px; display: flex; align-items: center; gap: 4px;">
+              <span>✓ Auto-resuelta (30m)</span>
+            </div>
+          `;
+        } else {
+          // Dentro de los 30 minutos de suspensión de la cámara
+          const remainingSecs = Math.max(0, Math.floor((thirtyMinMs - diffMs) / 1000));
+          const remMins = Math.floor(remainingSecs / 60);
+          const remSecs = remainingSecs % 60;
+          const countdownTarget = alertTime + thirtyMinMs;
+          suspensionHtml = `
+            <div class="alerta-suspension-box" data-target="${countdownTarget}" data-id="${alert.id}" style="font-size: 11px; color: #F5A623; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
+              <span class="cooldown-dot" style="width: 5px; height: 5px; background: #F5A623; border-radius: 50%; display: inline-block;"></span>
+              <span>Suspensión: <b class="alerta-countdown-digits">${String(remMins).padStart(2, '0')}:${String(remSecs).padStart(2, '0')}</b></span>
+            </div>
+          `;
+        }
+      }
 
       const row = document.createElement('tr');
       
@@ -196,6 +241,7 @@ async function loadAlertas() {
         </td>
         <td>
           <span class="badge ${stateObj.badgeClass}">${stateObj.label}</span>
+          ${suspensionHtml}
         </td>
         <td style="font-size: 13px; color: var(--color-text-secondary);">
           ${formattedDate}
@@ -210,6 +256,9 @@ async function loadAlertas() {
 
       tableBody.appendChild(row);
     });
+
+    // Inicia el temporizador de cuenta regresiva de suspensión en las alertas activas
+    initAlertsCountdownTicker();
 
     // Calcula y actualiza el texto de resumen de paginación (ej: "Mostrando 1-10 de 25 alertas")
     const page = typeof data.page !== 'undefined' ? data.page : currentPage;
@@ -233,6 +282,69 @@ async function loadAlertas() {
     console.error('Error al obtener alertas:', error);
     showTableError(error.message);
   }
+}
+
+/**
+ * Temporizador en tiempo real (1s) para los contadores de suspensión de alertas activas
+ */
+function initAlertsCountdownTicker() {
+  if (window._alertsCountdownInterval) {
+    clearInterval(window._alertsCountdownInterval);
+    window._alertsCountdownInterval = null;
+  }
+
+  function updateAlertTimers() {
+    const boxes = document.querySelectorAll('.alerta-suspension-box');
+    const now = Date.now();
+    let hasActive = false;
+
+    boxes.forEach(box => {
+      const target = parseInt(box.getAttribute('data-target'), 10);
+      if (!target) return;
+
+      const diff = target - now;
+      if (diff > 0) {
+        hasActive = true;
+        const totalSecs = Math.floor(diff / 1000);
+        const mins = Math.floor(totalSecs / 60);
+        const secs = totalSecs % 60;
+        const digits = box.querySelector('.alerta-countdown-digits');
+        if (digits) {
+          digits.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+      } else {
+        // Expiró la suspensión de 30m sin nueva detección: transformar la fila en Resuelta
+        box.innerHTML = `
+          <span style="color: var(--color-success, #2ECC71); font-size: 11px; font-weight: 500;">
+            ✓ Auto-resuelta (30m)
+          </span>
+        `;
+        box.removeAttribute('data-target');
+
+        const row = box.closest('tr');
+        if (row) {
+          const badge = row.querySelector('.badge');
+          if (badge) {
+            badge.className = 'badge badge-resuelta';
+            badge.textContent = 'Resuelta';
+          }
+        }
+
+        // Sincronizar en base de datos inmediatamente
+        requestAPI('/api/alertas/verificar-expiradas', { method: 'POST' }).catch(() => {});
+      }
+    });
+
+    if (!hasActive && boxes.length === 0) {
+      if (window._alertsCountdownInterval) {
+        clearInterval(window._alertsCountdownInterval);
+        window._alertsCountdownInterval = null;
+      }
+    }
+  }
+
+  updateAlertTimers();
+  window._alertsCountdownInterval = setInterval(updateAlertTimers, 1000);
 }
 
 /**

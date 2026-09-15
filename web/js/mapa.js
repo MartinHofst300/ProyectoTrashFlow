@@ -35,11 +35,65 @@ document.addEventListener('DOMContentLoaded', () => {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
   }).addTo(map);
 
-  // Inicializa el agrupador de marcadores (Marker Cluster Group) para evitar saturar la pantalla de pines
+  // Mapeo oficial de colores por zona municipal (Centro en Rojo #EF4444 según pedido)
+  const ZONE_COLORS = {
+    1: '#EF4444', // Zona 1 - Centro (Rojo)
+    2: '#F5A623', // Zona 2 - Olivos (Ámbar / Naranja)
+    3: '#3B82F6', // Zona 3 - La Lucila (Azul)
+    4: '#10B981', // Zona 4 - Munro (Verde)
+    5: '#8B5CF6', // Zona 5 - Villa Martelli (Violeta)
+    6: '#EC4899', // Zona 6 - Florida (Rosa)
+    7: '#14B8A6'  // Zona 7 - Carapachay (Turquesa / Teal)
+  };
+
+  function getZonaColor(alerta) {
+    const zId = Number(alerta.zona_id);
+    if (zId && ZONE_COLORS[zId]) return ZONE_COLORS[zId];
+    
+    const zName = (alerta.zona || '').trim().toLowerCase();
+    if (zName.includes('centro')) return '#EF4444';
+    if (zName.includes('olivos')) return '#F5A623';
+    if (zName.includes('lucila')) return '#3B82F6';
+    if (zName.includes('munro')) return '#10B981';
+    if (zName.includes('martelli')) return '#8B5CF6';
+    if (zName.includes('florida')) return '#EC4899';
+    if (zName.includes('carapachay')) return '#14B8A6';
+
+    if (alerta.zona_color && alerta.zona_color !== '#3B82F6') return alerta.zona_color;
+    return '#60B7BA';
+  }
+
+  // Inicializa el agrupador de marcadores (Marker Cluster Group) con estilos inteligentes según zona
   const markersCluster = L.markerClusterGroup({
     spiderfyOnMaxZoom: true,      // Al hacer clic en un clúster al zoom máximo, despliega los pines en abanico
     showCoverageOnHover: false,    // Oculta el polígono de cobertura al pasar el mouse por encima
-    zoomToBoundsOnClick: true     // Centra y hace zoom automáticamente al pulsar un clúster
+    zoomToBoundsOnClick: true,    // Centra y hace zoom automáticamente al pulsar un clúster
+    iconCreateFunction: function (cluster) {
+      const markers = cluster.getAllChildMarkers();
+      const count = markers.length;
+
+      // Evalúa los colores de zona presentes en este grupo para teñir el clúster coherentemente
+      const colorCounts = {};
+      markers.forEach(m => {
+        const c = m.zonaColor || '#60B7BA';
+        colorCounts[c] = (colorCounts[c] || 0) + 1;
+      });
+
+      let predominantColor = '#60B7BA';
+      let maxCount = 0;
+      for (const [col, num] of Object.entries(colorCounts)) {
+        if (num > maxCount) {
+          maxCount = num;
+          predominantColor = col;
+        }
+      }
+
+      return L.divIcon({
+        html: `<div style="background-color: ${predominantColor}; box-shadow: 0 0 0 4px ${predominantColor}40;"><span>${count}</span></div>`,
+        className: 'marker-cluster marker-cluster-zone',
+        iconSize: L.point(48, 48)
+      });
+    }
   });
   map.addLayer(markersCluster);
 
@@ -167,20 +221,22 @@ document.addEventListener('DOMContentLoaded', () => {
           estadoLabel = 'DESCARTADA';
         }
 
-        const zona_color = alerta.zona_color || '#cccccc';
+        const zona_color = getZonaColor(alerta);
 
-        // Crea un ícono personalizado usando HTML y CSS inline (DivIcon) para aplicar sombras dinámicas
-        const estado_class = estadoLower.replace(' ', '_').replace(' ', '_');
+        // Cada puntito (marcador) lleva el color de la zona en la que está (ej. Centro = Rojo)
+        const estado_class = estadoLower.replace(/\s+/g, '_');
         const markerClass = `map-marker map-marker-${estado_class}`;
         const markerIcon = L.divIcon({
           className: markerClass,
-          html: `<div class="marker-pin" style="background-color: ${status_color}; border: 3px solid ${zona_color};"></div>`,
+          html: `<div class="marker-pin" style="background-color: ${zona_color}; border: 2.5px solid #ffffff;"></div>`,
           iconSize: [28, 28],
           iconAnchor: [14, 14]
         });
         
-        // Instancia el marcador cartográfico
+        // Instancia el marcador cartográfico y anota el estado y zona para el clúster
         const marker = L.marker([lat, lng], { icon: markerIcon });
+        marker.alertStatus = alerta.estado;
+        marker.zonaColor = zona_color;
 
         // Prepara el popup enriquecido con imagen, estado, zona y fecha de detección
         const thumbUrl = alerta.foto ? `${BASE_URL}/${alerta.foto}` : `${BASE_URL}/static/fotos/placeholder_sin_evidencia.jpg`;
@@ -194,7 +250,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <h3 class="map-popup-address" title="${alerta.direccion}">${alerta.direccion}</h3>
               <div class="map-popup-badges">
                 <span class="map-popup-badge" style="background-color: ${status_color};">${estadoLabel}</span>
-                <span class="map-popup-badge map-popup-badge-zona" style="background-color: ${zona_color};">Zona: ${alerta.zona}</span>
+                <span class="map-popup-badge map-popup-badge-zona"><span class="map-popup-zona-dot" style="background-color: ${zona_color};"></span>Zona: ${alerta.zona}</span>
               </div>
               <div class="map-popup-meta">
                 <span>Reportado: <strong>${formatDateTime(alerta.fecha)}</strong></span>

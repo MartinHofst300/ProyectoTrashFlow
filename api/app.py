@@ -131,8 +131,36 @@ def internal_error(e):
     """Manejo de error 500: Errores no capturados en el código Python de Flask"""
     return jsonify({"error": "Error interno del servidor", "mensaje": "Ocurrió un error inesperado en el servidor"}), 500
 
+
+def iniciar_worker_auto_resolucion():
+    """
+    Hilo en segundo plano (daemon) para resolver automáticamente
+    las alertas que superaron los 30 minutos de suspensión sin re-detección.
+    Se ejecuta periódicamente cada 30 segundos.
+    """
+    import threading
+    import time
+
+    def loop():
+        time.sleep(5)  # Breve espera inicial
+        while True:
+            try:
+                from api.rutas.alertas import auto_resolver_alertas_expiradas
+                auto_resolver_alertas_expiradas()
+            except Exception as e:
+                print(f"[Worker Auto-Resolución Error]: {e}")
+            time.sleep(30)
+
+    t = threading.Thread(target=loop, daemon=True)
+    t.start()
+
+
+# Iniciar el worker en segundo plano
+iniciar_worker_auto_resolucion()
+
 # Arranque del servidor de desarrollo local
 if __name__ == "__main__":
     # Corre por defecto en el puerto 5005 con recarga automática activada (debug=True)
     app.run(debug=True, host='0.0.0.0', port=5005)
+
 

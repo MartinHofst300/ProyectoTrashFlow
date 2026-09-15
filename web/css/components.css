@@ -239,10 +239,17 @@ select.form-input option {
 }
 
 .badge-resuelta {
-  /* verde success */
-  background-color: rgba(46, 204, 113, 0.15);
-  color: var(--color-success);
-  border: 1px solid rgba(46, 204, 113, 0.3);
+  /* verde success de alto contraste */
+  background-color: rgba(46, 204, 113, 0.18);
+  color: var(--color-success, #2ECC71);
+  border: 1px solid rgba(46, 204, 113, 0.4);
+  font-weight: 600;
+}
+
+body.theme-light .badge-resuelta {
+  background-color: rgba(16, 185, 129, 0.12);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.35);
 }
 
 .badge-descartada {

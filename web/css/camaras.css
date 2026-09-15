@@ -92,9 +92,10 @@
 
 /* Badge de estado: En línea (Activo) */
 .badge-online {
-  background-color: rgba(61, 88, 67, 0.15);
-  color: var(--status-resuelta);
-  border: 1px solid rgba(61, 88, 67, 0.3);
+  background-color: rgba(46, 204, 113, 0.18);
+  color: var(--status-resuelta, #2ECC71);
+  border: 1px solid rgba(46, 204, 113, 0.4);
+  font-weight: 600;
 }
 
 /* Badge de estado: Desconectado */

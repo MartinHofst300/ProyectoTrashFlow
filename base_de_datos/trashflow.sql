@@ -721,7 +721,7 @@ CREATE TABLE `zonas` (
 --
 
 INSERT INTO `zonas` (`id`, `nombre`, `descripcion`, `color_hex`, `activa`, `creado_en`) VALUES
-(1, 'Centro', 'Zona céntrica de Vicente López', '#EF4444', 1, '2026-06-17 23:28:47'),
+(1, 'Centro', 'Zona céntrica de Vicente López', '#3B82F6', 1, '2026-06-17 23:28:47'),
 (2, 'Olivos', 'Barrio Olivos y alrededores', '#F5A623', 1, '2026-06-17 23:28:47'),
 (3, 'La Lucila', 'Barrio La Lucila', '#4A90D9', 1, '2026-06-17 23:28:47'),
 (4, 'Munro', 'Barrio Munro', '#2ECC71', 1, '2026-06-17 23:28:47'),

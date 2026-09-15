@@ -35,13 +35,14 @@
   /* Estados de alerta */
   --status-nueva: #E5484D;
   --status-asignada: #F5A623;
-  --status-resuelta: #3D5843;
+  --status-resuelta: #2ECC71; /* Verde vibrante y legible */
 
   /* Theme Tokens */
   --color-bg: #1A1A1A;
   --color-sidebar: #1A1A1A;
   --color-card: #232B27;
   --color-card-hover: #2A332E;
+  --color-surface: var(--color-card);
   --color-surface-subtle: rgba(0, 0, 0, 0.25);
   --color-input-bg: rgba(0, 0, 0, 0.3);
   --color-border: rgba(255, 255, 255, 0.08);
@@ -98,6 +99,7 @@ body.theme-oled {
   --color-sidebar: #000000;
   --color-card: #0D110F;
   --color-card-hover: #151C18;
+  --color-surface: #0D110F;
   --color-surface-subtle: rgba(255, 255, 255, 0.04);
   --color-input-bg: rgba(255, 255, 255, 0.05);
   --color-border: rgba(255, 255, 255, 0.12);
@@ -116,11 +118,14 @@ body.theme-light {
   --color-sidebar: #FFFFFF;
   --color-card: #FFFFFF;
   --color-card-hover: #F8FAF9;
+  --color-surface: #FFFFFF;
   --color-surface-subtle: #F4F7F5;
   --color-input-bg: #FFFFFF;
   --color-border: #D1DBD5;
   --color-text-primary: #15221B;
   --color-text-secondary: #56685E;
+  --status-resuelta: #059669;
+  --color-success: #059669;
   --bg-dark: #FFFFFF;
   --bg-dark-alt: #F4F7F5;
   --white: #15221B;
