@@ -5,7 +5,7 @@ TrashFlow — Sistema de Monitoreo de Residuos Urbano
 Archivo: modelo/detector.py
 Descripción: Script daemon/servicio encargado de monitorear una cámara en vivo (webcam o stream).
              Carga el modelo entrenado YOLOv8n y procesa los frames.
-             Utiliza un contador de 5 frames consecutivos positivos con confianza >= 0.60
+             Utiliza un contador de 5 frames consecutivos positivos con confianza >= 0.50
              para filtrar falsos positivos antes de emitir una alerta.
              Al detectar una bolsa de basura con alta confianza, guarda el frame de la evidencia y
              envía una petición HTTP POST autenticada con token al backend para crear el reporte en el panel.

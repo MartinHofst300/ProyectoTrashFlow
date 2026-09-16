@@ -273,9 +273,9 @@ def receive_detection():
     if confianza < 0.0 or confianza > 1.0:
         return jsonify({"error": "Valor inválido", "mensaje": "La confianza debe estar entre 0.0 y 1.0"}), 400
 
-    # Filtro municipal: Descartar inmediatamente detecciones con menos del 85% de confianza
+    # Filtro municipal: Descartar inmediatamente detecciones con menos del 50% de confianza
     confianza_porcentaje = confianza * 100.0
-    if confianza_porcentaje < 85.0:
+    if confianza_porcentaje < 50.0:
         return jsonify({"error": "Confianza insuficiente", "mensaje": "Detección descartada por baja confianza"}), 422
 
     # 2. Verifica la validez del token de la cámara en MySQL
