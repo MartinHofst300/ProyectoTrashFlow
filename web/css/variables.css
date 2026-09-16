@@ -1,0 +1,307 @@
+/**
+ * TrashFlow — Sistema de Monitoreo de Residuos Urbano
+ * 
+ * Archivo: variables.css
+ * Descripción: Define el sistema de diseño visual (tokens de diseño) del proyecto.
+ *              Contiene las variables de colores personalizados, tipografías,
+ *              radios de borde, tiempos de transición, espaciados y sombras glow.
+ * 
+ * Dependencias:
+ *   - Ninguna (Es importado en todos los componentes y estilos)
+ * 
+ * Expone:
+ *   - Variables personalizadas CSS (--color-*, --font-*, --radius-*, etc.)
+ */
+
+:root {
+  /* Marca */
+  --primary: #3D5843;         /* Verde TrashFlow */
+  --primary-dark: #244039;    /* Hover/active/sombras */
+  --primary-light: #5C7A64;   /* Variante clara para fondos suaves */
+
+  /* Acentos */
+  --accent-blue: #479DE5;     /* Info / links / focus */
+  --accent-teal: #60B7BA;     /* Elementos tech/IA, gráficos secundarios */
+
+  /* Neutros por Defecto (Tema Oscuro TrashFlow) */
+  --bg-dark: #1A1A1A;         /* Fondo principal */
+  --bg-dark-alt: #232B27;     /* Fondo de tarjetas sobre --bg-dark */
+  --bg-cream: #EDE7D9;        
+  --bg-gray: #D9D8D4;         
+  --white: #FFFFFF;
+  --text-dark: #1A1A1A;
+  --text-muted: #7A857F;
+
+  /* Estados de alerta */
+  --status-nueva: #E5484D;
+  --status-asignada: #F5A623;
+  --status-resuelta: #2ECC71; /* Verde vibrante y legible */
+
+  /* Theme Tokens */
+  --color-bg: #1A1A1A;
+  --color-sidebar: #1A1A1A;
+  --color-card: #232B27;
+  --color-card-hover: #2A332E;
+  --color-surface: var(--color-card);
+  --color-surface-subtle: rgba(0, 0, 0, 0.25);
+  --color-input-bg: rgba(0, 0, 0, 0.3);
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: #9AA6A0;
+  --color-accent-blue: var(--accent-blue);
+  --color-accent-teal: var(--accent-teal);
+  --color-success: var(--status-resuelta);
+  --color-warning: var(--status-asignada);
+  --color-info: var(--accent-blue);
+  --color-danger: var(--status-nueva);
+  --btn-primary-text: #121815;
+  --toggle-track-bg: rgba(255, 255, 255, 0.18);
+
+  /* Fonts */
+  --font-primary: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-title: 'Space Grotesk', 'Inter', system-ui, -apple-system, sans-serif;
+  --font-size-base: 14px;       /* Controlado por Configuración: 12/14/16/18px */
+  --font-size-sm: 12px;
+  --font-size-lg: 16px;
+  --spacing-density: 1;         /* Multiplicador: 0.75/1/1.25 */
+
+  /* Border Radii */
+  --radius-card: 14px;
+  --radius-button: 8px;
+  --radius-badge: 6px;
+  --radius-input: 8px;
+
+  /* Transitions */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.25s ease;
+  --transition-slow: 0.4s ease;
+
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.4);
+  --shadow-glow: 0 0 15px rgba(96, 183, 186, 0.15);
+  --shadow-glow-blue: 0 0 15px rgba(71, 157, 229, 0.3);
+}
+
+/* ==========================================================================
+   Modo Medianoche OLED (Negro Puro #000000)
+   ========================================================================== */
+body.theme-oled {
+  --color-bg: #000000;
+  --color-sidebar: #000000;
+  --color-card: #0D110F;
+  --color-card-hover: #151C18;
+  --color-surface: #0D110F;
+  --color-surface-subtle: rgba(255, 255, 255, 0.04);
+  --color-input-bg: rgba(255, 255, 255, 0.05);
+  --color-border: rgba(255, 255, 255, 0.12);
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: #90A097;
+  --bg-dark: #000000;
+  --bg-dark-alt: #0D110F;
+  --toggle-track-bg: rgba(255, 255, 255, 0.25);
+}
+
+/* ==========================================================================
+   Modo Claro Institucional (Luminoso, Corporativo, Nítido)
+   ========================================================================== */
+body.theme-light {
+  --color-bg: #F0F4F2;
+  --color-sidebar: #FFFFFF;
+  --color-card: #FFFFFF;
+  --color-card-hover: #F8FAF9;
+  --color-surface: #FFFFFF;
+  --color-surface-subtle: #F4F7F5;
+  --color-input-bg: #FFFFFF;
+  --color-border: #D1DBD5;
+  --color-text-primary: #15221B;
+  --color-text-secondary: #56685E;
+  --status-resuelta: #059669;
+  --color-success: #059669;
+  --bg-dark: #FFFFFF;
+  --bg-dark-alt: #F4F7F5;
+  --white: #15221B;
+  --text-dark: #15221B;
+  --text-muted: #56685E;
+  --btn-primary-text: #FFFFFF;
+  --toggle-track-bg: #CBD5E1;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.08);
+}
+
+body.theme-light .sidebar-header {
+  border-bottom-color: #E2E8E5;
+}
+
+body.theme-light .topbar {
+  background-color: #FFFFFF !important;
+  border-bottom: 1px solid #D1DBD5 !important;
+}
+
+body.theme-light .topbar-title {
+  color: #15221B !important;
+}
+
+body.theme-light .sidebar-nav-link {
+  color: #56685E;
+}
+
+body.theme-light .sidebar-nav-link:hover {
+  background-color: #F0F4F2;
+  color: #15221B;
+}
+
+body.theme-light .sidebar-nav-link.active {
+  background-color: var(--primary);
+  color: #FFFFFF;
+}
+
+body.theme-light .sidebar-nav-link.active svg {
+  color: #FFFFFF;
+  stroke: #FFFFFF;
+}
+
+body.theme-light .sidebar-logo-full,
+body.theme-light .sidebar-logo-icon {
+  filter: brightness(0) saturate(100%) invert(31%) sepia(18%) saturate(920%) hue-rotate(92deg) brightness(92%) contrast(88%) !important;
+}
+
+body.theme-light .table th {
+  background-color: #F4F7F5;
+  color: #56685E;
+  border-bottom-color: #D1DBD5;
+}
+
+body.theme-light .table td {
+  border-bottom-color: #E8EEEC;
+  color: #15221B;
+}
+
+body.theme-light .table tbody tr:hover {
+  background-color: #F8FAF9;
+}
+
+body.theme-light .form-input, 
+body.theme-light .form-select,
+body.theme-light .filter-select,
+body.theme-light .filter-date {
+  background-color: #FFFFFF;
+  border-color: #CBD5E1;
+  color: #15221B;
+}
+
+body.theme-light .form-input:focus, 
+body.theme-light .form-select:focus,
+body.theme-light .filter-select:focus,
+body.theme-light .filter-date:focus {
+  background-color: #FFFFFF;
+  border-color: var(--accent-teal);
+}
+
+body.theme-light .custom-select-trigger,
+body.theme-light .custom-select-options {
+  background-color: #FFFFFF;
+  border-color: #CBD5E1;
+  color: #15221B;
+}
+
+body.theme-light .custom-select-option {
+  color: #15221B;
+}
+
+body.theme-light .custom-select-option:hover {
+  background-color: #F0F4F2;
+  color: #15221B;
+}
+
+body.theme-light .custom-select-option.selected {
+  background-color: var(--primary);
+  color: #FFFFFF;
+}
+
+body.theme-light .kpi-card {
+  background-color: #FFFFFF;
+  border-color: #D1DBD5;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+}
+
+body.theme-light .kpi-card:hover {
+  border-color: #B8C7C0;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+}
+
+body.theme-light .kpi-value {
+  color: #15221B !important;
+}
+
+body.theme-light .modal-container {
+  background-color: #FFFFFF;
+  border-color: #D1DBD5;
+}
+
+body.theme-light .modal-close-btn {
+  background-color: #F0F4F2;
+  color: #15221B;
+  border-color: #D1DBD5;
+}
+
+body.theme-light .modal-close-btn:hover {
+  background-color: var(--color-danger);
+  color: #FFFFFF;
+}
+
+body.theme-light .guide-card {
+  background: #FFFFFF !important;
+  border-color: #D1DBD5 !important;
+}
+
+body.theme-light .token-display-box {
+  background: #F4F7F5 !important;
+  border-color: #D1DBD5 !important;
+}
+
+body.theme-light .token-display-box code {
+  color: #0d9488 !important;
+}
+
+body.theme-light .token-code {
+  background: #F4F7F5;
+  color: #0d9488;
+  border-color: #D1DBD5;
+}
+
+body.theme-light .slider {
+  background-color: var(--toggle-track-bg);
+}
+
+body.theme-light .notifications-dropdown {
+  background-color: #FFFFFF;
+  border-color: #D1DBD5;
+}
+
+body.theme-light .notifications-dropdown-header {
+  background-color: #F4F7F5;
+  border-bottom-color: #D1DBD5;
+}
+
+body.theme-light .notification-item {
+  border-bottom-color: #E8EEEC;
+}
+
+body.theme-light .notification-item:hover {
+  background-color: #F8FAF9;
+}
+
+body.theme-light .stat-block {
+  background: #F4F7F5;
+}
+

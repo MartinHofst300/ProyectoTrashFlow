@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Operadores de Campo — TrashFlow</title>
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Gestión y administración del personal de limpieza y operadores asignados del sistema TrashFlow.">
+  
+  <link rel="icon" type="image/png" href="../assets/isotipo.png">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/sidebar.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/operadores.css">
+</head>
+<body>
+  <div class="app-container">
+    
+    <!-- Sidebar Navigation (dynamically rendered by JS) -->
+    <aside class="sidebar"></aside>
+    
+    <!-- Main Content Container -->
+    <main class="main-content">
+      
+      <!-- Topbar Header -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <h1 class="topbar-title">Operadores de Campo</h1>
+          <div class="topbar-subtitle">
+            <span>📍 Gestión de Operarios de Residuos</span>
+          </div>
+        </div>
+        
+        <div class="topbar-right">
+          <!-- Notification Bell -->
+          <div class="notification-bell" title="Alertas pendientes">
+            <svg viewBox="0 0 24 24">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
+          </div>
+          
+          <!-- Profile Initials Icon -->
+          <div class="user-profile">
+            <div class="user-avatar" title="Cargando...">--</div>
+          </div>
+        </div>
+      </header>
+      
+      <!-- Scroll Content Body -->
+      <div class="content-body">
+        
+        <!-- Header panel with button -->
+        <div class="operadores-header">
+          <div>
+            <h2 class="card-title" style="font-size: 20px;">Operadores de Campo</h2>
+            <p class="card-subtitle">Administre el personal encargado de recolectar los residuos. Los operarios no tienen cuenta de acceso web.</p>
+          </div>
+          
+          <button id="btn-nuevo-operador" class="btn btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            <span class="btn-text">Nuevo Operador</span>
+          </button>
+        </div>
+        
+        <!-- Operators Card Grid -->
+        <div id="operadores-grid" class="operadores-grid">
+          <!-- Las tarjetas se renderizan dinámicamente por operadores.js -->
+          <div class="empty-state">
+            <p>Cargando operadores...</p>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Create Operator Modal overlay -->
+  <div id="operador-modal" class="modal-overlay">
+    <div class="modal-container" style="max-width: 550px;">
+      <button class="modal-close-btn" id="modal-close-btn" aria-label="Cerrar modal">
+        <svg viewBox="0 0 24 24">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+      
+      <div class="modal-body" style="align-items: flex-start; padding: var(--spacing-lg);">
+        <h3 class="modal-header-title">Registrar Nuevo Operador</h3>
+        <p class="card-subtitle" style="margin-bottom: var(--spacing-md);">Ingrese los datos de contacto e identificación del operario de campo.</p>
+        
+        <form id="operador-form" class="modal-form-grid">
+          
+          <div class="form-group">
+            <label for="op-nombre" class="form-label">Nombre *</label>
+            <input type="text" id="op-nombre" class="form-input" placeholder="Ej: Juan" required autocomplete="off">
+          </div>
+          
+          <div class="form-group">
+            <label for="op-apellido" class="form-label">Apellido *</label>
+            <input type="text" id="op-apellido" class="form-input" placeholder="Ej: Pérez" required autocomplete="off">
+          </div>
+          
+          <div class="form-group">
+            <label for="op-dni" class="form-label">DNI</label>
+            <input type="text" id="op-dni" class="form-input" placeholder="Ej: 35123456" autocomplete="off" maxlength="10">
+          </div>
+
+          <div class="form-group">
+            <label for="op-fecha-nacimiento" class="form-label">Fecha de Nacimiento</label>
+            <input type="date" id="op-fecha-nacimiento" class="form-input">
+          </div>
+          
+          <div class="form-group">
+            <label for="op-telefono" class="form-label">Teléfono</label>
+            <input type="tel" id="op-telefono" class="form-input" value="+54 " placeholder="+54 11XXXX-XXXX" autocomplete="off">
+          </div>
+
+          <div class="form-group full-width-field">
+            <label for="op-zona" class="form-label">Zona asignada</label>
+            <select id="op-zona" class="form-input">
+              <option value="">Sin zona asignada</option>
+              <option value="1">Centro</option>
+              <option value="2">Olivos</option>
+              <option value="3">La Lucila</option>
+              <option value="4">Munro</option>
+              <option value="5">Villa Martelli</option>
+              <option value="6">Florida</option>
+              <option value="7">Carapachay</option>
+            </select>
+          </div>
+          
+          <div class="full-width-field form-error" id="form-error-msg">
+            ⚠️ Ocurrió un error.
+          </div>
+          
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="btn-cancelar">Cancelar</button>
+            <button type="submit" class="btn btn-primary" id="btn-guardar">Guardar Operador</button>
+          </div>
+          
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Operator Modal overlay -->
+  <div id="editar-operador-modal" class="modal-overlay">
+    <div class="modal-container" style="max-width: 550px;">
+      <button class="modal-close-btn" id="edit-modal-close-btn" aria-label="Cerrar modal">
+        <svg viewBox="0 0 24 24">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+      
+      <div class="modal-body" style="align-items: flex-start; padding: var(--spacing-lg);">
+        <h3 class="modal-header-title">Editar Operador</h3>
+        <p class="card-subtitle" style="margin-bottom: var(--spacing-md);">Modifique los campos que desee actualizar.</p>
+        
+        <form id="editar-operador-form" class="modal-form-grid">
+          <input type="hidden" id="edit-op-id">
+          
+          <div class="form-group">
+            <label for="edit-op-nombre" class="form-label">Nombre *</label>
+            <input type="text" id="edit-op-nombre" class="form-input" required autocomplete="off">
+          </div>
+          
+          <div class="form-group">
+            <label for="edit-op-apellido" class="form-label">Apellido *</label>
+            <input type="text" id="edit-op-apellido" class="form-input" required autocomplete="off">
+          </div>
+
+          <div class="form-group">
+            <label for="edit-op-dni" class="form-label">DNI</label>
+            <input type="text" id="edit-op-dni" class="form-input" autocomplete="off" maxlength="10">
+          </div>
+
+          <div class="form-group">
+            <label for="edit-op-fecha-nacimiento" class="form-label">Fecha de Nacimiento</label>
+            <input type="date" id="edit-op-fecha-nacimiento" class="form-input">
+          </div>
+          
+          <div class="form-group">
+            <label for="edit-op-telefono" class="form-label">Teléfono</label>
+            <input type="tel" id="edit-op-telefono" class="form-input" autocomplete="off">
+          </div>
+
+          <div class="form-group">
+            <label for="edit-op-zona" class="form-label">Zona asignada</label>
+            <select id="edit-op-zona" class="form-input">
+              <option value="">Sin zona asignada</option>
+              <option value="1">Centro</option>
+              <option value="2">Olivos</option>
+              <option value="3">La Lucila</option>
+              <option value="4">Munro</option>
+              <option value="5">Villa Martelli</option>
+              <option value="6">Florida</option>
+              <option value="7">Carapachay</option>
+            </select>
+          </div>
+          
+          <div class="full-width-field form-error" id="edit-form-error-msg">
+            ⚠️ Ocurrió un error.
+          </div>
+          
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="btn-edit-cancelar">Cancelar</button>
+            <button type="submit" class="btn btn-primary" id="btn-edit-guardar">Guardar Cambios</button>
+          </div>
+          
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Script Core Imports -->
+  <script src="../js/config.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/operadores.js"></script>
+</body>
+</html>

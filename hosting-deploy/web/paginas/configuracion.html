@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Configuración del Sistema — TrashFlow</title>
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Ajustes de accesibilidad, tamaño de fuente, personalización de marca municipal, temas y preferencias de visualización.">
+  
+  <link rel="icon" type="image/png" href="../assets/isotipo.png">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/sidebar.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/configuracion.css">
+</head>
+<body>
+  <div class="app-container">
+    
+    <!-- Sidebar Navigation (dynamically rendered by JS) -->
+    <aside class="sidebar"></aside>
+    
+    <!-- Main Content Container -->
+    <main class="main-content">
+      
+      <!-- Topbar Header -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <h1 class="topbar-title">Configuración del Sistema</h1>
+          <div class="topbar-subtitle">
+            <span>📍 Preferencias del Panel</span>
+          </div>
+        </div>
+        
+        <div class="topbar-right">
+          <!-- Notification Bell -->
+          <div class="notification-bell" title="Alertas pendientes">
+            <svg viewBox="0 0 24 24">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
+          </div>
+          
+          <!-- Profile Initials Icon -->
+          <div class="user-profile">
+            <div class="user-avatar" title="Cargando...">--</div>
+          </div>
+        </div>
+      </header>
+      
+      <!-- Scroll Content Body -->
+      <div class="content-body">
+        
+        <div class="config-header">
+          <div>
+            <h2 class="card-title" style="font-size: 20px;">Personalización y Preferencias</h2>
+            <p class="card-subtitle">Ajuste la identidad de su municipio, paletas de estilo, tamaño de letra y alertas de guardia.</p>
+          </div>
+          
+          <div class="config-actions">
+            <button type="button" id="btn-reset-settings" class="btn btn-secondary">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="1 4 1 10 7 10"></polyline>
+                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+              </svg>
+              <span>Restablecer</span>
+            </button>
+            <button type="button" id="btn-save-settings" class="btn btn-primary">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                <polyline points="7 3 7 8 15 8"></polyline>
+              </svg>
+              <span>Guardar Configuración</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="config-layout-grid">
+          
+          <!-- Columna Izquierda: Temas y Estilos -->
+          <div class="config-col">
+            
+            <!-- 1. Modos de Tema y Paleta de Acento -->
+            <section class="card config-card">
+              <div class="card-header">
+                <div class="setting-title-box">
+                  <span class="setting-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="5"></circle>
+                      <line x1="12" y1="1" x2="12" y2="3"></line>
+                      <line x1="12" y1="21" x2="12" y2="23"></line>
+                      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                      <line x1="1" y1="12" x2="3" y2="12"></line>
+                      <line x1="21" y1="12" x2="23" y2="12"></line>
+                      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                  </span>
+                  <div>
+                    <h3 class="card-title">Tema Visual y Colores de Marca</h3>
+                    <p class="card-subtitle">Seleccione el modo de contraste de fondo y el color de acento institucional.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="setting-body">
+                
+                <!-- Theme Mode Radio Cards -->
+                <label class="form-label" style="margin-bottom: 8px;">Ambiente de Color:</label>
+                <div class="theme-modes-grid">
+                  <label class="theme-mode-card active" data-theme="dark">
+                    <input type="radio" name="theme-mode" value="dark" checked>
+                    <div class="theme-swatch dark-swatch"></div>
+                    <strong>Oscuro TrashFlow</strong>
+                    <small>Verde bosque oscuro</small>
+                  </label>
+
+                  <label class="theme-mode-card" data-theme="oled">
+                    <input type="radio" name="theme-mode" value="oled">
+                    <div class="theme-swatch oled-swatch"></div>
+                    <strong>Medianoche OLED</strong>
+                    <small>Negro puro profundo</small>
+                  </label>
+
+                  <label class="theme-mode-card" data-theme="light">
+                    <input type="radio" name="theme-mode" value="light">
+                    <div class="theme-swatch light-swatch"></div>
+                    <strong>Claro Institucional</strong>
+                    <small>Fondos claros de oficina</small>
+                  </label>
+                </div>
+
+                <!-- Accent Color Picker -->
+                <div style="margin-top: var(--spacing-md);">
+                  <label class="form-label" style="margin-bottom: 8px;">Color de Acento y Botones:</label>
+                  <div class="color-swatches-row">
+                    <div class="color-swatches">
+                      <button type="button" class="swatch-btn active" data-color="#60B7BA" style="background-color: #60B7BA;" title="Verde TrashFlow Teal"></button>
+                      <button type="button" class="swatch-btn" data-color="#479DE5" style="background-color: #479DE5;" title="Azul Municipal"></button>
+                      <button type="button" class="swatch-btn" data-color="#10B981" style="background-color: #10B981;" title="Esmeralda"></button>
+                      <button type="button" class="swatch-btn" data-color="#F5A623" style="background-color: #F5A623;" title="Ámbar"></button>
+                      <button type="button" class="swatch-btn" data-color="#8B5CF6" style="background-color: #8B5CF6;" title="Violeta"></button>
+                      <button type="button" class="swatch-btn" data-color="#E5484D" style="background-color: #E5484D;" title="Carmesí"></button>
+                    </div>
+
+                    <div class="custom-color-container" title="Elegir cualquier color personalizado">
+                      <input type="color" id="custom-color-picker" value="#60B7BA">
+                      <span class="custom-color-label">Personalizado</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Border Radius Style -->
+                <div style="margin-top: var(--spacing-md);">
+                  <label class="form-label" for="select-border-radius">Estilo de Bordes y Tarjetas:</label>
+                  <select id="select-border-radius" class="form-input">
+                    <option value="round" selected>Redondeado Suave (14px — Moderno)</option>
+                    <option value="standard">Estándar Corporativo (8px)</option>
+                    <option value="straight">Recto / Clásico (4px)</option>
+                  </select>
+                </div>
+
+                <!-- High Contrast Toggle -->
+                <div class="toggle-row" style="margin-top: var(--spacing-md);">
+                  <div>
+                    <strong style="display: block; font-size: 13.5px; color: var(--color-text-primary);">Modo Alto Contraste</strong>
+                    <span style="font-size: 12px; color: var(--color-text-secondary);">Refuerza los bordes y el brillo de texto para visualización con luz solar.</span>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="check-high-contrast">
+                    <span class="slider round"></span>
+                  </label>
+                </div>
+
+              </div>
+            </section>
+
+          </div>
+
+          <!-- Columna Derecha: Accesibilidad, Notificaciones y Sistema -->
+          <div class="config-col">
+            
+            <!-- 3. Tamaño de Letra y Legibilidad -->
+            <section class="card config-card">
+              <div class="card-header">
+                <div class="setting-title-box">
+                  <span class="setting-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="4 7 4 4 20 4 20 7"></polyline>
+                      <line x1="9" y1="20" x2="15" y2="20"></line>
+                      <line x1="12" y1="4" x2="12" y2="20"></line>
+                    </svg>
+                  </span>
+                  <div>
+                    <h3 class="card-title">Tamaño de Letra en Todo el Sistema</h3>
+                    <p class="card-subtitle">Ajuste la escala de texto que se aplicará a todas las pantallas del panel.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="setting-body">
+                <div class="font-size-picker">
+                  <button type="button" class="font-size-opt" data-size="12">
+                    <span style="font-size: 11px;">A</span>
+                    <span>Pequeño</span>
+                    <small>12px</small>
+                  </button>
+                  <button type="button" class="font-size-opt active" data-size="14">
+                    <span style="font-size: 14px;">A</span>
+                    <span>Normal</span>
+                    <small>14px (Recomendado)</small>
+                  </button>
+                  <button type="button" class="font-size-opt" data-size="16">
+                    <span style="font-size: 17px;">A</span>
+                    <span>Grande</span>
+                    <small>16px</small>
+                  </button>
+                  <button type="button" class="font-size-opt" data-size="18">
+                    <span style="font-size: 20px;">A</span>
+                    <span>Extra</span>
+                    <small>18px</small>
+                  </button>
+                </div>
+
+                <!-- Live Preview Card -->
+                <div class="preview-box" id="font-preview-box">
+                  <div class="preview-badge">Muestra de lectura</div>
+                  <h4 style="margin: 0 0 4px 0; color: var(--color-text-primary);">Alerta TF-1025 — Av. del Libertador 1520</h4>
+                  <p style="margin: 0; color: var(--color-text-secondary); line-height: 1.5;">
+                    Detección por IA: Bolsa de residuos en vía pública. Operario asignado: Cuadrilla Central.
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            <!-- 4. Densidad de Pantalla -->
+            <section class="card config-card">
+              <div class="card-header">
+                <div class="setting-title-box">
+                  <span class="setting-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                      <line x1="3" y1="9" x2="21" y2="9"></line>
+                      <line x1="3" y1="15" x2="21" y2="15"></line>
+                      <line x1="9" y1="3" x2="9" y2="21"></line>
+                      <line x1="15" y1="3" x2="15" y2="21"></line>
+                    </svg>
+                  </span>
+                  <div>
+                    <h3 class="card-title">Densidad de la Interfaz</h3>
+                    <p class="card-subtitle">Regula la separación de elementos, altura de filas de tabla y espaciado de tarjetas.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="setting-body">
+                <div class="density-selector">
+                  <label class="density-card">
+                    <input type="radio" name="density" value="compact">
+                    <div class="density-card-content">
+                      <strong>Compacta</strong>
+                      <span>Mayor cantidad de filas y datos visibles por pantalla.</span>
+                    </div>
+                  </label>
+                  <label class="density-card">
+                    <input type="radio" name="density" value="normal" checked>
+                    <div class="density-card-content">
+                      <strong>Equilibrada (Por Defecto)</strong>
+                      <span>Balance óptimo entre información y confort visual.</span>
+                    </div>
+                  </label>
+                  <label class="density-card">
+                    <input type="radio" name="density" value="comfortable">
+                    <div class="density-card-content">
+                      <strong>Espaciosa</strong>
+                      <span>Márgenes amplios para uso táctil o prolongado.</span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </section>
+
+            <!-- 5. Notificaciones y Guardia -->
+            <section class="card config-card">
+              <div class="card-header">
+                <div class="setting-title-box">
+                  <span class="setting-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                      <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                  </span>
+                  <div>
+                    <h3 class="card-title">Alertas de Guardia y Monitoreo</h3>
+                    <p class="card-subtitle">Configuración de sonido, avisos de escritorio y zona de inicio.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="setting-body">
+                
+                <div class="toggle-row">
+                  <div>
+                    <strong style="display: block; font-size: 13.5px; color: var(--color-text-primary);">Aviso Sonoro al Detectar Basura</strong>
+                    <span style="font-size: 12px; color: var(--color-text-secondary);">Tono suave por parlantes para avisar al operador de guardia.</span>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="check-sound-alert" checked>
+                    <span class="slider round"></span>
+                  </label>
+                </div>
+
+                <div class="toggle-row" style="margin-top: var(--spacing-sm);">
+                  <div>
+                    <strong style="display: block; font-size: 13.5px; color: var(--color-text-primary);">Notificaciones de Escritorio</strong>
+                    <span style="font-size: 12px; color: var(--color-text-secondary);">Avisos flotantes en Windows aunque el navegador esté minimizado.</span>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="check-browser-notif">
+                    <span class="slider round"></span>
+                  </label>
+                </div>
+
+                <div class="form-group" style="margin-top: var(--spacing-md); margin-bottom: var(--spacing-sm);">
+                  <label for="select-default-zone" class="form-label">Zona Predeterminada de Monitoreo:</label>
+                  <select id="select-default-zone" class="form-input">
+                    <option value="todas">Todas las Zonas</option>
+                    <option value="1">Centro</option>
+                    <option value="2">Olivos</option>
+                    <option value="3">La Lucila</option>
+                    <option value="4">Munro</option>
+                    <option value="5">Villa Martelli</option>
+                    <option value="6">Florida</option>
+                    <option value="7">Carapachay</option>
+                  </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label for="select-refresh-rate" class="form-label">Frecuencia de Actualización Automática:</label>
+                  <select id="select-refresh-rate" class="form-input">
+                    <option value="15">Cada 15 segundos</option>
+                    <option value="30" selected>Cada 30 segundos (Recomendado)</option>
+                    <option value="60">Cada 1 minuto</option>
+                    <option value="manual">Manual (Solo al hacer clic)</option>
+                  </select>
+                </div>
+
+              </div>
+            </section>
+
+            <!-- 6. Información de Usuario y Plataforma (Sin "Servidor Flask") -->
+            <section class="card config-card">
+              <div class="card-header">
+                <div class="setting-title-box">
+                  <span class="setting-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <line x1="12" y1="16" x2="12" y2="12"></line>
+                      <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                    </svg>
+                  </span>
+                  <div>
+                    <h3 class="card-title">Información de la Sesión</h3>
+                    <p class="card-subtitle">Detalles de la cuenta y estado operativo del centro de monitoreo.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="setting-body">
+                <div class="system-info-list">
+                  <div class="info-row">
+                    <span class="info-label">Usuario Conectado:</span>
+                    <strong id="user-display-name">Administrador Municipal</strong>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">Email:</span>
+                    <span id="user-display-email">admin@trashflow.gov.ar</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">Rol de Acceso:</span>
+                    <span class="badge" style="background: rgba(96, 183, 186, 0.2); color: var(--accent-teal);">Administrador</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">Versión de Plataforma:</span>
+                    <span style="font-family: monospace; color: #a3e635;">v2.4.0 (Edición Municipal)</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">Centro de Control:</span>
+                    <span style="color: #4ade80;">● Operativo y Sincronizado</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+          </div>
+
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Script Core Imports -->
+  <script src="../js/config.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/configuracion.js"></script>
+</body>
+</html>
