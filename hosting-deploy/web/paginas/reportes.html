@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reportes y Métricas — TrashFlow</title>
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Reportes avanzados, métricas de rendimiento municipal y exportación de datos de recolección de residuos.">
+  
+  <link rel="icon" type="image/png" href="../assets/isotipo.png">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/sidebar.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/reportes.css">
+</head>
+<body>
+  <div class="app-container">
+    
+    <!-- Sidebar Navigation (dynamically rendered by JS) -->
+    <aside class="sidebar"></aside>
+    
+    <!-- Main Content Container -->
+    <main class="main-content">
+      
+      <!-- Topbar Header -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <h1 class="topbar-title">Reportes y Métricas</h1>
+          <div class="topbar-subtitle">
+            <span>📍 Estadísticas Analíticas — Vicente López</span>
+          </div>
+        </div>
+        
+        <div class="topbar-right">
+          <!-- Notification Bell -->
+          <div class="notification-bell" title="Alertas pendientes">
+            <svg viewBox="0 0 24 24">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
+          </div>
+          
+          <!-- Profile Initials Icon -->
+          <div class="user-profile">
+            <div class="user-avatar" title="Cargando...">--</div>
+          </div>
+        </div>
+      </header>
+      
+      <!-- Scroll Content Body -->
+      <div class="content-body" id="printable-report">
+        
+        <!-- Header panel with export actions -->
+        <div class="reportes-header no-print">
+          <div>
+            <h2 class="card-title" style="font-size: 20px;">Informes de Limpieza y Rendimiento Urbano</h2>
+            <p class="card-subtitle">Genere balances de gestión, analice tiempos de respuesta por cuadrilla y exporte estadísticas para auditoría.</p>
+          </div>
+          
+          <div class="reportes-actions">
+            <button id="btn-export-csv" class="btn btn-secondary" title="Descargar planilla CSV para Excel">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              <span>Exportar CSV</span>
+            </button>
+            <button id="btn-print-report" class="btn btn-primary" title="Imprimir o exportar como PDF">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                <rect x="6" y="14" width="12" height="8"></rect>
+              </svg>
+              <span>Imprimir / PDF</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter Bar Card -->
+        <section class="card filter-bar no-print">
+          <form id="report-filter-form" class="filter-form-grid">
+            
+            <div class="filter-group">
+              <label class="filter-label" for="filter-periodo">Período</label>
+              <select id="filter-periodo" class="filter-select">
+                <option value="7">Últimos 7 días</option>
+                <option value="30" selected>Últimos 30 días</option>
+                <option value="90">Último Trimestre (90 días)</option>
+                <option value="365">Último Año</option>
+                <option value="custom">Rango Personalizado...</option>
+              </select>
+            </div>
+
+            <div class="filter-group hidden" id="custom-date-group-1">
+              <label class="filter-label" for="filter-desde">Desde</label>
+              <input type="date" id="filter-desde" class="form-input filter-date">
+            </div>
+
+            <div class="filter-group hidden" id="custom-date-group-2">
+              <label class="filter-label" for="filter-hasta">Hasta</label>
+              <input type="date" id="filter-hasta" class="form-input filter-date">
+            </div>
+
+            <div class="filter-group">
+              <label class="filter-label" for="filter-zona">Zona de Vicente López</label>
+              <select id="filter-zona" class="filter-select">
+                <option value="todas">Todas las Zonas</option>
+                <option value="1">Centro</option>
+                <option value="2">Olivos</option>
+                <option value="3">La Lucila</option>
+                <option value="4">Munro</option>
+                <option value="5">Villa Martelli</option>
+                <option value="6">Florida</option>
+                <option value="7">Carapachay</option>
+              </select>
+            </div>
+
+            <div class="filter-group filter-btn-group">
+              <button type="submit" class="btn btn-primary" id="btn-aplicar-filtros">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                </svg>
+                <span>Generar Informe</span>
+              </button>
+            </div>
+
+          </form>
+        </section>
+
+        <!-- Executive KPIs -->
+        <section class="grid kpis-grid" id="report-kpis">
+          <div class="card kpi-card">
+            <div class="kpi-card-content">
+              <h3 class="card-title">Total Incidentes</h3>
+              <div class="kpi-value" id="kpi-rep-total">--</div>
+              <div class="card-subtitle text-info" id="kpi-rep-total-sub">En el período seleccionado</div>
+            </div>
+          </div>
+          
+          <div class="card kpi-card">
+            <div class="kpi-card-content">
+              <h3 class="card-title">Tasa de Resolución</h3>
+              <div class="kpi-value text-success" id="kpi-rep-efectividad">--%</div>
+              <div class="card-subtitle text-success" id="kpi-rep-resueltas-sub">-- resueltas con éxito</div>
+            </div>
+          </div>
+
+          <div class="card kpi-card">
+            <div class="kpi-card-content">
+              <h3 class="card-title">Tiempo Promedio</h3>
+              <div class="kpi-value text-warning" id="kpi-rep-tiempo">-- min</div>
+              <div class="card-subtitle text-warning">Detección a limpieza final</div>
+            </div>
+          </div>
+
+          <div class="card kpi-card">
+            <div class="kpi-card-content">
+              <h3 class="card-title">En Curso / Pendientes</h3>
+              <div class="kpi-value text-danger" id="kpi-rep-pendientes">--</div>
+              <div class="card-subtitle text-danger" id="kpi-rep-pendientes-sub">Requieren intervención</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Charts Grid 1: Trend & Zones -->
+        <section class="grid charts-grid">
+          
+          <!-- Trend Chart -->
+          <div class="card chart-card">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">Evolución Temporal de Detecciones</h3>
+                <p class="card-subtitle">Volumen de alertas totales vs alertas resueltas por día</p>
+              </div>
+            </div>
+            <div class="chart-card-wrapper">
+              <canvas id="report-trend-chart" style="max-height: 270px;"></canvas>
+            </div>
+          </div>
+
+          <!-- Zones Distribution Chart -->
+          <div class="card chart-card">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">Incidentes por Localidad</h3>
+                <p class="card-subtitle">Concentración de residuos en barrios de Vicente López</p>
+              </div>
+            </div>
+            <div class="chart-card-wrapper">
+              <canvas id="report-zones-chart" style="max-height: 270px;"></canvas>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- Charts Grid 2: Status Doughnut & Operators Performance -->
+        <section class="grid charts-grid" style="margin-top: var(--spacing-lg);">
+          
+          <!-- Status Distribution Doughnut -->
+          <div class="card chart-card">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">Distribución por Estado</h3>
+                <p class="card-subtitle">Proporción de alertas según su avance operativo</p>
+              </div>
+            </div>
+            <div class="chart-card-wrapper" style="display: flex; justify-content: center; align-items: center;">
+              <canvas id="report-status-chart" style="max-height: 250px; max-width: 320px;"></canvas>
+            </div>
+          </div>
+
+          <!-- Operators Performance Ranking -->
+          <div class="card chart-card">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">Desempeño de Cuadrillas y Operadores</h3>
+                <p class="card-subtitle">Alertas resueltas y tiempo promedio por operario de campo</p>
+              </div>
+            </div>
+            <div class="chart-card-wrapper">
+              <canvas id="report-operators-chart" style="max-height: 270px;"></canvas>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- Detailed Records Table -->
+        <section class="card table-card" style="margin-top: var(--spacing-lg);">
+          <div class="card-header">
+            <div>
+              <h3 class="card-title">Registro Detallado para Auditoría</h3>
+              <p class="card-subtitle">Historial de alertas comprendidas en el rango de filtrado (máx. 200 registros)</p>
+            </div>
+            <div class="table-search-box no-print">
+              <input type="text" id="table-search-input" class="form-input" placeholder="🔍 Filtrar dirección u operario..." style="font-size: 12px; padding: 6px 12px; width: 220px;">
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table" id="report-records-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Ubicación / Dirección</th>
+                  <th>Zona</th>
+                  <th>Estado</th>
+                  <th>Operador Asignado</th>
+                  <th>Detectado</th>
+                  <th>Resuelto</th>
+                </tr>
+              </thead>
+              <tbody id="report-table-body">
+                <tr class="skeleton-row"></tr>
+                <tr class="skeleton-row"></tr>
+                <tr class="skeleton-row"></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- JavaScript CDN Imports -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- Script Core Imports -->
+  <script src="../js/config.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/reportes.js"></script>
+</body>
+</html>

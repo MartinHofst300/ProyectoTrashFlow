@@ -22,12 +22,14 @@
  * Librerías incluidas en el core ESP32 (no requieren instalación):
  *   - WiFi.h
  *   - HTTPClient.h
+ *   - WiFiClientSecure.h
  *   - Wire.h
  * ============================================================
  */
 
 #include <ArduinoJson.h>
 #include <HTTPClient.h>
+#include <WiFiClientSecure.h>
 #include <LiquidCrystal_I2C.h>
 #include <WiFi.h>
 #include <WiFiMulti.h> // ← permite guardar varias redes Wi-Fi
@@ -41,9 +43,9 @@
 // El ESP32 se conecta automáticamente a la que encuentre primero.
 WiFiMulti wifiMulti;
 
-// URL del servidor Flask
-// IP de la PC en la red local — actualizar si cambia
-const char *SERVER_URL = "http://192.168.100.5:5005";
+// URL del servidor Flask (producción)
+// Dominio de hosting — https://trashflow.site
+const char *SERVER_URL = "https://trashflow.site";
 
 // Token de autenticación del dispositivo
 // ¡DEBE COINCIDIR con el token_device en la tabla dispositivos_hardware!
@@ -215,10 +217,12 @@ void loop() {
  */
 void consultarAlerta() {
   HTTPClient http;
+  WiFiClientSecure client;
+  client.setInsecure(); // Omite verificación de certificado (proyecto escolar)
   String url = String(SERVER_URL) + "/api/hardware/alerta-pendiente";
 
   Serial.println("[HTTP] Consultando: " + url);
-  http.begin(url);
+  http.begin(client, url);
   http.addHeader("X-Device-Token", DEVICE_TOKEN);
   http.addHeader("Content-Type", "application/json");
   http.setTimeout(HTTP_TIMEOUT_MS);
@@ -303,11 +307,13 @@ void consultarAlerta() {
  */
 void confirmarAlerta(int alertaId) {
   HTTPClient http;
+  WiFiClientSecure client;
+  client.setInsecure(); // Omite verificación de certificado (proyecto escolar)
   String url =
       String(SERVER_URL) + "/api/hardware/confirmar/" + String(alertaId);
 
   Serial.println("[HTTP] Confirmando alerta #" + String(alertaId));
-  http.begin(url);
+  http.begin(client, url);
   http.addHeader("X-Device-Token", DEVICE_TOKEN);
   http.addHeader("Content-Type", "application/json");
   http.setTimeout(HTTP_TIMEOUT_MS);
