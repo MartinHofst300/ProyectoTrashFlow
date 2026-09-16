@@ -9,13 +9,13 @@
  * 
  * Dependencias: Ninguna (utiliza la API nativa de Fetch de JS).
  * Expone:
- *   - BASE_URL: Dirección IP y puerto del backend en Flask.
+ *   - BASE_URL: URL base del backend en producción (https://trashflow.site).
  *   - USE_MOCK: Interruptor para activar la simulación local (mocking).
  *   - requestAPI(): Wrapper de fetch para hacer llamadas HTTP y manejar la expiración del token (401).
  */
 
-// URL base para conectar con el servidor de la API de Flask. Puerto 5005 evita colisiones en Windows.
-const BASE_URL = 'http://127.0.0.1:5005';
+// URL base para conectar con el servidor de la API de Flask en producción.
+const BASE_URL = 'https://trashflow.site';
 
 const USE_MOCK = false; 
 
@@ -81,9 +81,9 @@ async function requestAPI(endpoint, options = {}) {
     // Retorna la respuesta serializada en un objeto JS
     return await response.json();
   } catch (error) {
-    // Captura específicamente errores de conexión física (cuando Flask no se está ejecutando)
+    // Captura específicamente errores de conexión física (cuando la API no responde)
     if (error.message && (error.message.includes('Failed to fetch') || error.message.includes('NetworkError') || error.message.includes('Load failed'))) {
-      console.error('Error de conexión: La API Flask no está corriendo en el puerto 5000. Por favor, asegúrate de iniciar el servidor Flask.');
+      console.error('Error de conexión: No se pudo conectar con la API en https://trashflow.site. Por favor, asegúrate de que el servidor esté activo y accesible.');
     }
     console.error('API Error:', error);
     throw error;

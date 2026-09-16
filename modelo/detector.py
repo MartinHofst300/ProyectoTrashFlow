@@ -52,18 +52,18 @@ CAMARA_LONGITUD = float(os.getenv("CAMARA_LONGITUD", -58.4730000))
 API_URL = os.getenv("API_URL", "http://localhost:5005")
 
 # Umbrales operativos de detección
-UMBRAL_CONFIANZA       = 0.85  # Confianza mínima para considerar una detección válida
-CONSECUTIVOS_REQUERIDOS = 5    # Frames positivos consecutivos antes de disparar la alerta
+UMBRAL_CONFIANZA       = 0.50  # Confianza mínima para considerar una detección válida (50%, menos estricto para detectar más fácil)
+CONSECUTIVOS_REQUERIDOS = 5    # Frames positivos consecutivos antes de disparar la alerta (mantiene el filtro de 5 como antes)
 PAUSA_DURACION         = 1800  # 30 minutos de pausa tras una alerta (alineado con cooldown del ESP32)
 
 # Filtros anti-falso-positivo por geometría del bounding box
-# Una bolsa legítima en la vía pública ocupa al menos el 0.5% del área total del frame
-# Objetos más pequeños son ruido, sombras, o bolsas demasiado lejanas para reportar
-MIN_AREA_PORCENTAJE    = 0.005  # 0.5% del frame como mínimo
-# Ratio ancho/alto: una bolsa tiene forma roughly cuadrada (0.3 a 3.5)
-# Valores extremos (ej: ratio=10) suelen ser bordes de autos, postes, etc.
-MIN_ASPECT_RATIO       = 0.25
-MAX_ASPECT_RATIO       = 4.0
+# Una bolsa legítima en la vía pública ocupa al menos el 0.3% del área total del frame
+# (bajado de 0.5% → 0.3% para no descartar bolsas a mayor distancia)
+MIN_AREA_PORCENTAJE    = 0.003  # 0.3% del frame como mínimo
+# Ratio ancho/alto: una bolsa tiene forma roughly cuadrada o ligeramente alargada
+# Ampliado para incluir bolsas aplastadas o estiradas en el suelo
+MIN_ASPECT_RATIO       = 0.20
+MAX_ASPECT_RATIO       = 5.0
 
 # Crea el directorio de almacenamiento de fotos si no existe
 DETECCIONES_DIR = os.path.join(PROJECT_DIR, "api", "static", "fotos", "detecciones")
@@ -115,12 +115,44 @@ for i in range(5):
 env_cam_idx = os.getenv("CAMARA_INDICE_CV")
 indice_elegido = None
 
+def obtener_nombres_camaras():
+    """
+    Obtiene los nombres descriptivos de las cámaras conectadas en Windows (ej: DroidCam, Webcam integrada)
+    a través del registro de DirectShow. Si no se pueden obtener, retorna lista vacía de forma 100% segura.
+    """
+    try:
+        import winreg
+        names = []
+        category_clsid = "{860BB310-5D01-11d0-BD3B-00A0C911CE86}"
+        path = rf"CLSID\{category_clsid}\Instance"
+        for root in (winreg.HKEY_LOCAL_MACHINE, winreg.HKEY_CURRENT_USER):
+            try:
+                with winreg.OpenKey(root, rf"SOFTWARE\Classes\{path}") as key:
+                    num_subkeys, _, _ = winreg.QueryInfoKey(key)
+                    for i in range(num_subkeys):
+                        subkey_name = winreg.EnumKey(key, i)
+                        with winreg.OpenKey(key, subkey_name) as subkey:
+                            try:
+                                val, _ = winreg.QueryValueEx(subkey, "FriendlyName")
+                                if val and val not in names:
+                                    names.append(str(val))
+                            except FileNotFoundError:
+                                pass
+            except FileNotFoundError:
+                pass
+        return names
+    except Exception:
+        return []
+
+nombres_camaras = obtener_nombres_camaras()
+
 if env_cam_idx is not None:
     try:
         env_cam_idx = int(env_cam_idx)
         if env_cam_idx in camaras_detectadas:
             indice_elegido = env_cam_idx
-            print(f"[TrashFlow] Usando camara preconfigurada en .env: [{indice_elegido}]")
+            nombre_disp = nombres_camaras[indice_elegido] if indice_elegido < len(nombres_camaras) else f"Cámara {indice_elegido}"
+            print(f"[TrashFlow] Usando camara preconfigurada en .env: [{indice_elegido}] ({nombre_disp})")
         else:
             print(f"[TrashFlow] Advertencia: La camara {env_cam_idx} definida en .env no se encuentra conectada.")
     except ValueError:
@@ -132,11 +164,13 @@ if indice_elegido is None:
         sys.exit(1)
     elif len(camaras_detectadas) == 1:
         indice_elegido = camaras_detectadas[0]
-        print(f"[TrashFlow] Usando única cámara detectada: [{indice_elegido}]")
+        nombre_disp = nombres_camaras[indice_elegido] if indice_elegido < len(nombres_camaras) else f"Cámara {indice_elegido}"
+        print(f"[TrashFlow] Usando única cámara detectada: [{indice_elegido}] ({nombre_disp})")
     else:
         print("[TrashFlow] Cámaras detectadas:")
         for idx in camaras_detectadas:
-            print(f"  [{idx}] Cámara {idx}")
+            nombre_disp = nombres_camaras[idx] if idx < len(nombres_camaras) else f"Cámara {idx}"
+            print(f"  [{idx}] {nombre_disp}")
         
         while True:
             try:
@@ -200,10 +234,10 @@ while True:
         estado_monitoreo = "Monitoreando..."
 
         # Realiza la predicción del frame con los parámetros ajustados:
-        # iou=0.3: reduce la agresividad del Non-Maximum Suppression, permitiendo detectar bolsas que se superponen o están muy juntas entre sí
-        # conf=0.35: baja el umbral mínimo de confianza de 0.60 a 0.35 para que el modelo no descarte detecciones válidas con confianza media
-        # max_det=50: aumenta el límite máximo de detecciones por frame de 300 a 50 objetos visibles simultáneamente (más que suficiente para el caso de uso)
-        results = model.predict(frame, verbose=False, iou=0.3, conf=0.35, max_det=50)
+        # iou=0.45: equilibrio entre NMS agresivo y permisivo; permite detectar bolsas juntas sin crear duplicados excesivos
+        # conf=0.35: umbral de pre-filtrado del modelo (deja pasar desde 35% para que UMBRAL_CONFIANZA=0.50 aplique el filtro final)
+        # max_det=50: límite máximo de detecciones por frame (más que suficiente para el caso de uso)
+        results = model.predict(frame, verbose=False, iou=0.45, conf=0.35, max_det=50)
         
         # Filtra detecciones por confianza Y por geometría del bounding box
         detecciones_frame = []
