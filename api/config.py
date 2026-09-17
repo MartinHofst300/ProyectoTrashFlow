@@ -16,7 +16,18 @@ import os
 from dotenv import load_dotenv
 
 # Carga las variables definidas en el archivo .env al entorno de ejecución de Python
-load_dotenv()
+# Busca tanto en la raíz del proyecto como en la carpeta de la API
+_base_dir = os.path.dirname(os.path.abspath(__file__))
+_parent_dir = os.path.dirname(_base_dir)
+_env_parent = os.path.join(_parent_dir, ".env")
+_env_current = os.path.join(_base_dir, ".env")
+
+if os.path.exists(_env_parent):
+    load_dotenv(_env_parent)
+elif os.path.exists(_env_current):
+    load_dotenv(_env_current)
+else:
+    load_dotenv()
 
 # Clave secreta para la encriptación de cookies y sesiones de Flask
 SECRET_KEY = os.getenv("SECRET_KEY", "cambiar_esto_en_produccion")
@@ -33,7 +44,14 @@ DB_NAME = os.getenv("DB_NAME", "trashflow")
 
 # Configuración de carpetas absolutas para el guardado físico de fotos (evidencia de IA)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-UPLOAD_FOLDER = os.getenv(
-    "UPLOAD_FOLDER", 
-    os.path.join(BASE_DIR, "static", "fotos", "detecciones")
-)
+_upload_env = os.getenv("UPLOAD_FOLDER")
+if _upload_env and os.path.isabs(_upload_env):
+    UPLOAD_FOLDER = _upload_env
+elif _upload_env:
+    _clean_rel = _upload_env.lstrip('/').lstrip('\\')
+    if _clean_rel.startswith('api/'):
+        _clean_rel = _clean_rel[4:]
+    UPLOAD_FOLDER = os.path.normpath(os.path.join(BASE_DIR, _clean_rel))
+else:
+    UPLOAD_FOLDER = os.path.join(BASE_DIR, "static", "fotos", "detecciones")
+

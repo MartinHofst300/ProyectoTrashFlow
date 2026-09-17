@@ -74,7 +74,7 @@ def get_camaras():
             if c['latitud']  is not None: c['latitud']  = float(c['latitud'])
             if c['longitud'] is not None: c['longitud'] = float(c['longitud'])
             if c['ultima_conexion'] is not None:
-                c['ultima_conexion'] = c['ultima_conexion'].strftime('%Y-%m-%d %H:%M:%S')
+                c['ultima_conexion'] = c['ultima_conexion'].strftime('%Y-%m-%dT%H:%M:%SZ')
             
             ultima_activa_dt = c.get('ultima_alerta_activa')
             is_cooldown = False
@@ -89,9 +89,9 @@ def get_camaras():
             c['cooldown_restante_seg'] = cooldown_restante
 
             if c.get('ultima_alerta') is not None:
-                c['ultima_alerta'] = c['ultima_alerta'].strftime('%Y-%m-%d %H:%M:%S')
+                c['ultima_alerta'] = c['ultima_alerta'].strftime('%Y-%m-%dT%H:%M:%SZ')
             if c.get('ultima_alerta_activa') is not None:
-                c['ultima_alerta_activa'] = c['ultima_alerta_activa'].strftime('%Y-%m-%d %H:%M:%S')
+                c['ultima_alerta_activa'] = c['ultima_alerta_activa'].strftime('%Y-%m-%dT%H:%M:%SZ')
 
         return jsonify(camaras), 200
     except Exception as e:
@@ -144,7 +144,7 @@ def get_camara_detail(camara_id):
         if c['latitud']  is not None: c['latitud']  = float(c['latitud'])
         if c['longitud'] is not None: c['longitud'] = float(c['longitud'])
         if c['ultima_conexion'] is not None:
-            c['ultima_conexion'] = c['ultima_conexion'].strftime('%Y-%m-%d %H:%M:%S')
+            c['ultima_conexion'] = c['ultima_conexion'].strftime('%Y-%m-%dT%H:%M:%SZ')
 
         ultima_activa_dt = c.get('ultima_alerta_activa')
         is_cooldown = False
@@ -159,9 +159,9 @@ def get_camara_detail(camara_id):
         c['cooldown_restante_seg'] = cooldown_restante
 
         if c.get('ultima_alerta') is not None:
-            c['ultima_alerta'] = c['ultima_alerta'].strftime('%Y-%m-%d %H:%M:%S')
+            c['ultima_alerta'] = c['ultima_alerta'].strftime('%Y-%m-%dT%H:%M:%SZ')
         if c.get('ultima_alerta_activa') is not None:
-            c['ultima_alerta_activa'] = c['ultima_alerta_activa'].strftime('%Y-%m-%d %H:%M:%S')
+            c['ultima_alerta_activa'] = c['ultima_alerta_activa'].strftime('%Y-%m-%dT%H:%M:%SZ')
 
         return jsonify(c), 200
     except Exception as e:

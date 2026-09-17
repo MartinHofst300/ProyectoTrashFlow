@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
     4: '#10B981', // Zona 4 - Munro (Verde)
     5: '#8B5CF6', // Zona 5 - Villa Martelli (Violeta)
     6: '#EC4899', // Zona 6 - Florida (Rosa)
-    7: '#14B8A6'  // Zona 7 - Carapachay (Turquesa / Teal)
+    7: '#F97316'  // Zona 7 - Carapachay (Naranja vibrante)
   };
 
   function getZonaColor(alerta) {
@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (zName.includes('munro')) return '#10B981';
     if (zName.includes('martelli')) return '#8B5CF6';
     if (zName.includes('florida')) return '#EC4899';
-    if (zName.includes('carapachay')) return '#14B8A6';
+    if (zName.includes('carapachay')) return '#F97316';
 
     if (alerta.zona_color && alerta.zona_color !== '#3B82F6') return alerta.zona_color;
     return '#60B7BA';
@@ -239,12 +239,12 @@ document.addEventListener('DOMContentLoaded', () => {
         marker.zonaColor = zona_color;
 
         // Prepara el popup enriquecido con imagen, estado, zona y fecha de detección
-        const thumbUrl = alerta.foto ? `${BASE_URL}/${alerta.foto}` : `${BASE_URL}/static/fotos/placeholder_sin_evidencia.jpg`;
+        const thumbUrl = resolveFotoUrl(alerta.foto);
         
         const popupContent = `
           <div class="map-popup-card">
             <div class="map-popup-img-container">
-              <img src="${thumbUrl}" class="map-popup-img" onerror="this.onerror=null;this.src='${BASE_URL}/static/fotos/placeholder_sin_evidencia.jpg'">
+              <img src="${thumbUrl}" class="map-popup-img" onerror="this.onerror=null;this.src=getFotoPlaceholder()">
             </div>
             <div class="map-popup-info">
               <h3 class="map-popup-address" title="${alerta.direccion}">${alerta.direccion}</h3>
@@ -330,7 +330,11 @@ document.addEventListener('DOMContentLoaded', () => {
  */
 function formatDateTime(dateStr) {
   if (!dateStr) return '';
-  const date = new Date(dateStr);
+  let iso = String(dateStr).trim();
+  if (!iso.endsWith('Z') && !/[+-]\d{2}:?\d{2}$/.test(iso)) {
+    iso = iso.replace(' ', 'T') + 'Z';
+  }
+  const date = new Date(iso);
   if (isNaN(date.getTime())) return dateStr;
 
   const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];

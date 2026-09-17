@@ -23,12 +23,37 @@ Dependencias:
 """
 
 import secrets
+from datetime import timedelta
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt
 from api.database import query
 
 # Registro del Blueprint de hardware
 hardware_bp = Blueprint('hardware', __name__)
+
+
+def _limpiar_texto_ascii(texto):
+    """
+    Normaliza caracteres acentuados y especiales a ASCII plano
+    para evitar que el display LCD 2004 (controlador HD44780)
+    muestre caracteres erróneos o símbolos japoneses (katakana).
+    """
+    if not texto:
+        return ""
+    reemplazos = {
+        'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u', 'ü': 'u', 'ñ': 'n',
+        'Á': 'A', 'É': 'E', 'Í': 'I', 'Ó': 'O', 'Ú': 'U', 'Ü': 'U', 'Ñ': 'N',
+        'º': 'o', 'ª': 'a', '°': 'o'
+    }
+    res = []
+    for ch in str(texto):
+        if ch in reemplazos:
+            res.append(reemplazos[ch])
+        elif ord(ch) < 128:
+            res.append(ch)
+        else:
+            res.append(' ')
+    return "".join(res).strip()
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -166,15 +191,17 @@ def get_pending_alert():
 
         fecha_str = None
         if notif['creado_en']:
-            fecha_str = notif['creado_en'].strftime('%d/%m %H:%M')
+            # El servidor guarda en UTC. Para el display LCD del operario en Argentina (UTC-3), restamos 3 horas.
+            fecha_local = notif['creado_en'] - timedelta(hours=3)
+            fecha_str = fecha_local.strftime('%d/%m %H:%M')
 
         return jsonify({
             "alerta": {
                 "notif_id":         notif['notif_id'],
                 "alerta_id":        notif['alerta_id'],
                 "titulo":           notif['titulo'],
-                "zona":             notif['zona_nombre'] or 'Sin zona',
-                "direccion":        direccion_corta,
+                "zona":             _limpiar_texto_ascii(notif['zona_nombre'] or 'Sin zona'),
+                "direccion":        _limpiar_texto_ascii(direccion_corta),
                 "direccion_completa": direccion_completa,
                 "latitud":          float(notif['latitud'])  if notif['latitud']  else None,
                 "longitud":         float(notif['longitud']) if notif['longitud'] else None,

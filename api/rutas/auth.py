@@ -122,8 +122,13 @@ def login():
         }), 200
 
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         print(f"[Login Error] {e}")
-        return jsonify({"error": "Error interno del servidor", "mensaje": "Ocurrió un error al procesar el login"}), 500
+        return jsonify({
+            "error": "Error interno del servidor",
+            "mensaje": f"Error al procesar el login: {str(e)}"
+        }), 500
 
 
 @auth_bp.route('/auth/me', methods=['GET'])

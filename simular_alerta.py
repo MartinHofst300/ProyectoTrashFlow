@@ -58,7 +58,7 @@ def simular_alerta():
                 INSERT INTO alertas
                     (camara_id, zona_id, estado_id, operador_id, confianza,
                      foto_url, latitud, longitud, direccion, detectado_en, asignado_en, creado_en)
-                VALUES (%s, %s, 2, %s, %s, 'test.jpg', %s, %s, %s, NOW(), NOW(), NOW())
+                VALUES (%s, %s, 2, %s, %s, 'static/fotos/detecciones/deteccion_20260915_224219_cam1_conf86.jpg', %s, %s, %s, NOW(), NOW(), NOW())
                 """,
                 (CAMARA_ID, ZONA_ID, OPERADOR_ID, confianza, LATITUD, LONGITUD, DIRECCION)
             )

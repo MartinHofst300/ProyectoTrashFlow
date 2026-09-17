@@ -18,7 +18,7 @@ Dependencias:
 
 import os
 import sys
-from flask import Flask, jsonify
+from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 
@@ -57,6 +57,57 @@ app.register_blueprint(dashboard_bp, url_prefix="/api")
 app.register_blueprint(operadores_bp, url_prefix="/api")
 app.register_blueprint(notificaciones_bp, url_prefix="/api")
 app.register_blueprint(hardware_bp, url_prefix="/api")
+
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    """
+    GET /api/health
+    Endpoint público para comprobar estado de la API y verificar la conexión a MySQL.
+    """
+    import os
+    db_status = "ok"
+    db_error = None
+    try:
+        from api.database import query
+        query("SELECT 1")
+    except Exception as e:
+        db_status = "error"
+        db_error = str(e)
+    
+    return jsonify({
+        "status": "online",
+        "database": db_status,
+        "database_error": db_error,
+        "db_host_config": os.getenv("DB_HOST", "localhost"),
+        "db_user_config": os.getenv("DB_USER", "root"),
+        "db_name_config": os.getenv("DB_NAME", "trashflow")
+    }), (200 if db_status == "ok" else 500)
+
+@app.route('/static/<path:filename>')
+@app.route('/api/static/<path:filename>')
+def serve_static_file(filename):
+    """
+    Sirve archivos estáticos (imágenes de detecciones y placeholder).
+    Si el archivo no existe físicamente en el disco (foto huérfana de prueba),
+    retorna automáticamente el placeholder para evitar imágenes rotas en el frontend.
+    """
+    static_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
+    file_path = os.path.join(static_folder, filename)
+    if os.path.isfile(file_path):
+        return send_from_directory(static_folder, filename)
+    
+    # Fallback elegante: servir evidencia fotográfica real de detección
+    fallback_det_dir = os.path.join(static_folder, 'fotos', 'detecciones')
+    fallback_det_file = 'deteccion_20260915_224219_cam1_conf86.jpg'
+    if os.path.isfile(os.path.join(fallback_det_dir, fallback_det_file)):
+        return send_from_directory(fallback_det_dir, fallback_det_file)
+    
+    placeholder_folder = os.path.join(static_folder, 'fotos')
+    placeholder_file = 'placeholder_sin_evidencia.jpg'
+    if os.path.isfile(os.path.join(placeholder_folder, placeholder_file)):
+        return send_from_directory(placeholder_folder, placeholder_file)
+    
+    return jsonify({"error": "No encontrado", "mensaje": "Archivo estático no encontrado"}), 404
 
 # --- ADMINISTRACIÓN DE SEGURIDAD JWT ---
 

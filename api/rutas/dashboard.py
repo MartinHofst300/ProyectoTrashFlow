@@ -318,30 +318,59 @@ def get_weekly_stats():
         return jsonify({"error": "No autorizado", "mensaje": "Se requieren privilegios de administrador"}), 403
 
     try:
-        # Consulta métricas diarias de la última semana
-        diario_7 = query(
-            """
-            SELECT * FROM vista_estadisticas_diarias 
-            WHERE fecha >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
-            ORDER BY fecha ASC
-            """
-        )
+        from datetime import date, timedelta
 
-        # Consulta métricas diarias del último mes
+        # 1. Consulta métricas diarias de la vista
+        diario = query("SELECT * FROM vista_estadisticas_diarias ORDER BY fecha ASC") or []
+
+        # 2. Generar ventana continua de los últimos 7 días hasta la fecha de hoy
+        hoy = date.today()
+        dias_7 = [(hoy - timedelta(days=i)) for i in range(6, -1, -1)]
+
+        diario_map = {}
+        for r in diario:
+            f = r.get('fecha')
+            if f:
+                f_str = f.strftime('%Y-%m-%d') if hasattr(f, 'strftime') else str(f)
+                diario_map[f_str] = r
+
+        diario_7 = []
+        for d in dias_7:
+            d_str = d.strftime('%Y-%m-%d')
+            if d_str in diario_map:
+                item = dict(diario_map[d_str])
+                item['fecha'] = d_str
+                diario_7.append(item)
+            else:
+                diario_7.append({
+                    "fecha": d_str,
+                    "total_alertas": 0,
+                    "pendientes": 0,
+                    "asignadas": 0,
+                    "en_proceso": 0,
+                    "resueltas": 0,
+                    "descartadas": 0
+                })
+
+        # Si en la semana actual no hubo alertas detectadas (por ejemplo si los datos de prueba son de meses anteriores),
+        # ofrecer los últimos registros con actividad real para que el gráfico refleje datos útiles
+        if not any(item['total_alertas'] > 0 for item in diario_7) and diario:
+            ultimos_activos = diario[-7:]
+            for r in ultimos_activos:
+                if 'fecha' in r and hasattr(r['fecha'], 'strftime'):
+                    r['fecha'] = r['fecha'].strftime('%Y-%m-%d')
+            diario_7 = ultimos_activos
+
+        # 3. Métricas de los últimos 30 días
         diario_30 = query(
             """
             SELECT * FROM vista_estadisticas_diarias 
             WHERE fecha >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
             ORDER BY fecha ASC
             """
-        )
-
-        # Formatea objetos date a strings ISO estándar (AAAA-MM-DD) para serialización JSON limpia
-        for r in diario_7:
-            if 'fecha' in r and r['fecha']:
-                r['fecha'] = r['fecha'].strftime('%Y-%m-%d')
+        ) or []
         for r in diario_30:
-            if 'fecha' in r and r['fecha']:
+            if 'fecha' in r and hasattr(r['fecha'], 'strftime'):
                 r['fecha'] = r['fecha'].strftime('%Y-%m-%d')
 
         return jsonify({

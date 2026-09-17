@@ -122,9 +122,21 @@ async function loadCharts() {
     zonesCanvas.classList.remove('hidden');
 
     // Procesa datos de tendencias semanales
-    const rawWeekly = weeklyData.ultimos_7_dias || [];
+    let rawWeekly = weeklyData.ultimos_7_dias || [];
+    if (rawWeekly.length === 0) {
+      const today = new Date();
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(today);
+        d.setDate(d.getDate() - i);
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        rawWeekly.push({ fecha: `${day}/${month}`, total_alertas: 0 });
+      }
+    }
+
     const weeklyLabels = rawWeekly.map(item => {
       if (!item.fecha) return "";
+      if (item.fecha.includes('/')) return item.fecha;
       const parts = item.fecha.split("-");
       // Transforma formato 'AAAA-MM-DD' a 'DD/MM' para el gráfico
       return parts.length >= 3 ? `${parts[2]}/${parts[1]}` : item.fecha;
@@ -135,16 +147,20 @@ async function loadCharts() {
     const rawZones = zonesData || [];
     const zoneLabels = rawZones.map(item => item.zona || "Desconocido");
     const zoneCounts = rawZones.map(item => item.total_alertas || 0);
-    // Determinar colores dinámicos de zonas
-    const maxVal = Math.max(...zoneCounts);
-    const zoneColors = rawZones.map((item, idx) => {
-      if (item.zona === 'Centro' || item.zona.toLowerCase().includes('centro')) {
-        return '#E5484D'; // --status-nueva (Zona crítica)
-      }
-      if (zoneCounts[idx] === maxVal && maxVal > 0) {
-        return '#3D5843'; // --primary (Máximo volumen)
-      }
-      return '#60B7BA'; // --accent-teal (Resto de zonas)
+    // Colores asignados específicos para cada zona oficial de Vicente López
+    const ZONE_COLOR_PALETTE = {
+      'Centro': '#EF4444',        // Rojo
+      'Olivos': '#F5A623',        // Ámbar / Dorado
+      'La Lucila': '#3B82F6',     // Azul
+      'Munro': '#10B981',         // Verde esmeralda
+      'Villa Martelli': '#8B5CF6',// Púrpura / Violeta
+      'Florida': '#EC4899',       // Rosa intenso
+      'Carapachay': '#F97316'     // Naranja vibrante (diferenciado de Munro)
+    };
+
+    const zoneColors = rawZones.map(item => {
+      const zName = item.zona || '';
+      return ZONE_COLOR_PALETTE[zName] || item.color_hex || '#3B82F6';
     });
 
     // Paleta tipográfica y de color del gráfico integrada con variables CSS
@@ -189,6 +205,8 @@ async function loadCharts() {
             ticks: { color: chartFontColor, font: { family: 'Inter', size: 11 } }
           },
           y: {
+            beginAtZero: true,
+            suggestedMax: 5,
             grid: { color: chartGridColor },
             ticks: { color: chartFontColor, font: { family: 'Inter', size: 11 }, precision: 0 }
           }
@@ -253,7 +271,7 @@ async function loadRecentAlerts() {
     if (alerts.length === 0) {
       tableBody.innerHTML = `
         <tr>
-          <td colspan="6" class="text-center" style="padding: 40px var(--spacing-xl); color: var(--text-muted);">
+          <td colspan="5" class="text-center" style="padding: 40px var(--spacing-xl); color: var(--text-muted);">
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--spacing-sm);">
               <div style="font-size: 32px; filter: grayscale(100%) opacity(0.6);">🎉</div>
               <div style="font-weight: 600; color: var(--white); font-size: 15px; font-family: var(--font-title);">¡Todo al día!</div>
@@ -269,8 +287,8 @@ async function loadRecentAlerts() {
     // Mapeo estético de estados con sus respectivas clases CSS
     const statesMap = {
       pendiente: { label: 'Pendiente', badgeClass: 'badge-pendiente' },
-      asignada: { label: 'Alertada', badgeClass: 'badge-alertada' },
-      en_proceso: { label: 'Alertada', badgeClass: 'badge-alertada' },
+      asignada: { label: 'Asignada', badgeClass: 'badge-alertada' },
+      en_proceso: { label: 'En Proceso', badgeClass: 'badge-alertada' },
       alertada: { label: 'Alertada', badgeClass: 'badge-alertada' },
       resuelta: { label: 'Resuelta', badgeClass: 'badge-resuelta' },
       descartada: { label: 'Descartada', badgeClass: 'badge-descartada' }
@@ -283,7 +301,7 @@ async function loadRecentAlerts() {
       const row = document.createElement('tr');
       row.innerHTML = `
         <td>
-          <img src="${BASE_URL}/${alert.foto}" class="table-thumbnail alert-thumb" alt="Evidencia" data-id="${alert.id}" onerror="this.onerror=null;this.src='${BASE_URL}/static/fotos/placeholder_sin_evidencia.jpg'">
+          <img src="${resolveFotoUrl(alert.foto)}" class="table-thumbnail alert-thumb" alt="Evidencia" data-id="${alert.id}" onerror="this.onerror=null;this.src=getFotoPlaceholder()">
         </td>
         <td>
           <div style="font-weight: 600;">${alert.zona}</div>
@@ -297,8 +315,6 @@ async function loadRecentAlerts() {
         </td>
         <td style="font-size: 13px; color: var(--color-text-secondary);">
           ${formattedDate}
-        </td>
-        <td>
         </td>
       `;
 
@@ -320,7 +336,11 @@ async function loadRecentAlerts() {
  */
 function formatDateTime(dateStr) {
   if (!dateStr) return '';
-  const date = new Date(dateStr);
+  let iso = String(dateStr).trim();
+  if (!iso.endsWith('Z') && !/[+-]\d{2}:?\d{2}$/.test(iso)) {
+    iso = iso.replace(' ', 'T') + 'Z';
+  }
+  const date = new Date(iso);
   if (isNaN(date.getTime())) return dateStr;
 
   const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];

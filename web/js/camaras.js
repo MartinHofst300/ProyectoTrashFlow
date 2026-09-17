@@ -10,9 +10,12 @@
  *   - Leaflet (geocodificación + mapa en modales)
  */
 
+let listaCamarasGlobal = [];
+
 document.addEventListener('DOMContentLoaded', () => {
   loadCameras();
   initCameraModals();
+  initFiltroZonaCamaras();
 
   // Geocodificadores para ambos modales
   window._geocoderCrear = initGeocoder({
@@ -54,6 +57,26 @@ document.addEventListener('DOMContentLoaded', () => {
   }, 30000);
 });
 
+function initFiltroZonaCamaras() {
+  const filtroZona = document.getElementById('filtro-zona-camara');
+  if (filtroZona) {
+    filtroZona.addEventListener('change', () => {
+      aplicarFiltroZonaCamaras();
+    });
+  }
+}
+
+function aplicarFiltroZonaCamaras() {
+  const filtroZona = document.getElementById('filtro-zona-camara');
+  const zonaId = filtroZona ? filtroZona.value : '';
+
+  const filtradas = zonaId
+    ? listaCamarasGlobal.filter(c => String(c.zona_id) === String(zonaId))
+    : listaCamarasGlobal;
+
+  renderCamarasCards(filtradas, !!zonaId);
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // loadCameras — Carga y renderiza las tarjetas de cámara con Cooldown de 30 min
 // ─────────────────────────────────────────────────────────────────────────────
@@ -67,151 +90,8 @@ async function loadCameras() {
 
   try {
     const data = await requestAPI('/api/camaras');
-
-    // Remueve shimmers
-    container.innerHTML = '';
-
-    if (!data || data.length === 0) {
-      container.innerHTML = `
-        <div class="empty-state">
-          <svg viewBox="0 0 24 24">
-            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
-            <circle cx="12" cy="13" r="4"></circle>
-          </svg>
-          <h3>No hay cámaras registradas</h3>
-          <p>Usá el botón "Nueva Cámara" para registrar el primer dispositivo.</p>
-        </div>
-      `;
-      return;
-    }
-
-    data.forEach(camara => {
-      const card = document.createElement('div');
-      
-      // ── Comprobación de Cooldown (30 min tras última alerta activa) ──
-      let isCooldown = false;
-      let cooldownEndTime = 0;
-
-      if (camara.is_cooldown && camara.cooldown_restante_seg > 0) {
-        isCooldown = true;
-        cooldownEndTime = Date.now() + (camara.cooldown_restante_seg * 1000);
-      } else if (camara.ultima_alerta_activa) {
-        const alertTime = new Date(camara.ultima_alerta_activa.replace(/-/g, '/')).getTime();
-        const diffMs = Date.now() - alertTime;
-        if (diffMs >= 0 && diffMs < COOLDOWN_DURATION_MS) {
-          isCooldown = true;
-          cooldownEndTime = alertTime + COOLDOWN_DURATION_MS;
-        }
-      }
-
-      card.className = `card camera-card ${isCooldown ? 'is-cooldown' : ''}`;
-
-      // ── Estado: usar el campo estado de la DB + cooldown + umbral de 90s ──
-      let badgeClass = 'badge-offline';
-      let badgeHtml  = 'Desconectado';
-
-      if (camara.estado === 'mantenimiento') {
-        badgeClass = 'badge-mantenimiento';
-        badgeHtml  = 'Mantenimiento';
-      } else if (isCooldown) {
-        badgeClass = 'badge-cooldown';
-        badgeHtml  = '<span class="cooldown-dot"></span>Pausada (30m)';
-      } else if (camara.estado === 'online' && camara.ultima_conexion) {
-        // Umbral: 90 segundos (3 ciclos de heartbeat de 30s)
-        const lastConn   = new Date(camara.ultima_conexion.replace(/-/g, '/'));
-        const diffSecs   = (new Date() - lastConn) / 1000;
-        if (diffSecs <= 90) {
-          badgeClass = 'badge-online';
-          badgeHtml  = 'En Línea';
-        }
-      }
-
-      const ultimaConexion = camara.ultima_conexion
-        ? formatDateTime(camara.ultima_conexion)
-        : 'Nunca conectado';
-
-      const cooldownBoxHtml = isCooldown ? `
-        <div class="camera-cooldown-box" id="cooldown-box-${camara.id}">
-          <div class="cooldown-box-header">
-            <span>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <polyline points="12 6 12 12 16 14"></polyline>
-              </svg>
-              Pausa anti-sobrecarga (30m)
-            </span>
-            <span style="font-size: 10.5px; opacity: 0.85;">Alerta reciente</span>
-          </div>
-          <div class="cooldown-box-timer">
-            <span class="cooldown-label">Reactivación en:</span>
-            <span class="cooldown-digits cooldown-countdown" data-camara-id="${camara.id}" data-target-time="${cooldownEndTime}">--:--</span>
-          </div>
-        </div>
-      ` : '';
-
-      card.innerHTML = `
-        <div class="camera-card-header">
-          <div class="camera-title-group">
-            <h3 class="camera-card-title">
-              Cámara #${camara.id}
-            </h3>
-            <div class="camera-card-location">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                <circle cx="12" cy="10" r="3"></circle>
-              </svg>
-              <span>${escapeHTML(camara.ubicacion)}</span>
-            </div>
-          </div>
-          <span class="badge ${badgeClass}">${badgeHtml}</span>
-        </div>
-
-        <div class="camera-stats">
-          <div class="stat-item">
-            <span class="stat-label">Detecciones</span>
-            <span class="stat-value">${camara.total_detecciones || 0}</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">Último Acceso</span>
-            <span class="stat-value" title="${camara.ultima_conexion || ''}">${ultimaConexion}</span>
-          </div>
-        </div>
-
-        ${cooldownBoxHtml}
-
-        <div class="camera-card-actions" style="margin-top: 15px; display: flex; gap: 8px; justify-content: flex-end;">
-          <a href="alertas.html?camara_id=${camara.id}"
-             class="btn btn-secondary"
-             style="flex: 1; text-align: center; text-decoration: none; display: inline-block;">
-            Ver Alertas
-          </a>
-          <button class="btn btn-secondary"
-                  style="padding: 8px 12px;"
-                  onclick="openEditCameraModal(${camara.id})"
-                  title="Editar cámara">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-            </svg>
-          </button>
-          <button class="btn"
-                  style="padding: 8px 12px; background: transparent; border: 1px solid var(--color-danger); color: var(--color-danger);"
-                  onclick="confirmDeleteCamera(${camara.id})"
-                  title="Desactivar cámara">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/>
-              <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
-            </svg>
-          </button>
-        </div>
-      `;
-
-      container.appendChild(card);
-    });
-
-    // Inicia el temporizador de actualización cada 1s
-    initCooldownTicker();
-
+    listaCamarasGlobal = Array.isArray(data) ? data : (data?.camaras || []);
+    aplicarFiltroZonaCamaras();
   } catch (error) {
     console.error('Error al cargar cámaras:', error);
     container.innerHTML = `
@@ -229,6 +109,158 @@ async function loadCameras() {
       </div>
     `;
   }
+}
+
+function renderCamarasCards(data, conFiltro = false) {
+  const container = document.getElementById('camaras-container');
+  if (!container) return;
+
+  // Remueve shimmers
+  container.innerHTML = '';
+
+  if (!data || data.length === 0) {
+    if (conFiltro) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <svg viewBox="0 0 24 24">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+            <circle cx="12" cy="13" r="4"></circle>
+          </svg>
+          <h3>No hay cámaras en esta zona</h3>
+          <p>No se encontraron dispositivos de detección instalados en la zona seleccionada.</p>
+        </div>
+      `;
+    } else {
+      container.innerHTML = `
+        <div class="empty-state">
+          <svg viewBox="0 0 24 24">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+            <circle cx="12" cy="13" r="4"></circle>
+          </svg>
+          <h3>No hay cámaras registradas</h3>
+          <p>Usá el botón "Nueva Cámara" para registrar el primer dispositivo.</p>
+        </div>
+      `;
+    }
+    return;
+  }
+
+  data.forEach(camara => {
+    const card = document.createElement('div');
+    
+    // ── Comprobación de Cooldown (30 min tras última alerta activa) ──
+    let isCooldown = false;
+    let cooldownEndTime = 0;
+
+    if (camara.is_cooldown && camara.cooldown_restante_seg > 0) {
+      isCooldown = true;
+      cooldownEndTime = Date.now() + (camara.cooldown_restante_seg * 1000);
+    } else if (camara.ultima_alerta_activa) {
+      let ua = String(camara.ultima_alerta_activa).trim();
+      if (!ua.endsWith('Z') && !/[+-]\d{2}:?\d{2}$/.test(ua)) ua = ua.replace(' ', 'T') + 'Z';
+      const alertTime = new Date(ua).getTime();
+      const diffMs = Date.now() - alertTime;
+      if (diffMs >= 0 && diffMs < COOLDOWN_DURATION_MS) {
+        isCooldown = true;
+        cooldownEndTime = alertTime + COOLDOWN_DURATION_MS;
+      }
+    }
+
+    card.className = `card camera-card ${isCooldown ? 'is-cooldown' : ''}`;
+
+    // ── Estado: usar el campo estado de la DB + cooldown + umbral de 90s ──
+    let badgeClass = 'badge-offline';
+    let badgeHtml  = 'Desconectado';
+
+    if (camara.estado === 'mantenimiento') {
+      badgeClass = 'badge-mantenimiento';
+      badgeHtml  = 'Mantenimiento';
+    } else if (isCooldown) {
+      badgeClass = 'badge-cooldown';
+      badgeHtml  = '<span class="cooldown-dot"></span>Pausada (30m)';
+    } else if (camara.estado === 'online' && camara.ultima_conexion) {
+      // Umbral: 90 segundos (3 ciclos de heartbeat de 30s)
+      let uc = String(camara.ultima_conexion).trim();
+      if (!uc.endsWith('Z') && !/[+-]\d{2}:?\d{2}$/.test(uc)) uc = uc.replace(' ', 'T') + 'Z';
+      const lastConn   = new Date(uc);
+      const diffSecs   = (Date.now() - lastConn.getTime()) / 1000;
+      if (diffSecs <= 90) {
+        badgeClass = 'badge-online';
+        badgeHtml  = 'En Línea';
+      }
+    }
+
+    const ultimaConexion = camara.ultima_conexion
+      ? formatDateTime(camara.ultima_conexion)
+      : 'Nunca conectado';
+
+    const cooldownBoxHtml = isCooldown ? `
+      <div class="camera-cooldown-box" id="cooldown-box-${camara.id}">
+        <div class="cooldown-box-header">
+          <span>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            Cámara en Cooldown (30 min)
+          </span>
+          <b class="cooldown-countdown" id="cooldown-${camara.id}" data-target-time="${cooldownEndTime}">--:--</b>
+        </div>
+        <p class="cooldown-box-desc">
+          Detectó una bolsa recientemente. En pausa para evitar registrar la misma bolsa múltiples veces.
+        </p>
+      </div>
+    ` : '';
+
+    card.innerHTML = `
+      <div class="camera-card-header">
+        <div class="camera-title-group">
+          <h3 class="camera-name">${escapeHTML(camara.nombre)}</h3>
+          <span class="camera-location">📍 ${escapeHTML(camara.ubicacion || 'Sin ubicación')}</span>
+        </div>
+        <span class="badge ${badgeClass}">${badgeHtml}</span>
+      </div>
+
+      ${cooldownBoxHtml}
+
+      <div class="camera-stats">
+        <div class="stat-item">
+          <span class="stat-label">Detecciones</span>
+          <span class="stat-value">${camara.total_detecciones ?? 0}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Última Conexión</span>
+          <span class="stat-value" style="font-size: 0.82rem;">${ultimaConexion}</span>
+        </div>
+      </div>
+
+      <div class="camera-actions" style="margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--color-border); display: flex; justify-content: flex-end; gap: 8px;">
+        <button class="btn btn-secondary"
+                style="padding: 8px 12px;"
+                onclick="openEditModal(${camara.id})"
+                title="Editar datos de la cámara">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+        </button>
+        <button class="btn"
+                style="padding: 8px 12px; background: transparent; border: 1px solid var(--color-danger); color: var(--color-danger);"
+                onclick="confirmDeleteCamera(${camara.id})"
+                title="Desactivar cámara">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/>
+            <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+          </svg>
+        </button>
+      </div>
+    `;
+
+    container.appendChild(card);
+  });
+
+  // Inicia el temporizador de actualización cada 1s
+  initCooldownTicker();
 }
 
 function initCooldownTicker() {
@@ -519,15 +551,20 @@ function escapeHTML(str) {
   );
 }
 
-/** Convierte 'YYYY-MM-DD HH:MM:SS' a 'DD/MM HH:MM' */
+/** Convierte timestamp UTC o ISO a 'DD/MM HH:MM hs' en hora local de Argentina */
 function formatDateTime(dateStr) {
-  try {
-    const parts = dateStr.split(/[- :]/);
-    if (parts.length < 5) return dateStr;
-    return `${parts[2]}/${parts[1]} ${parts[3]}:${parts[4]}`;
-  } catch (e) {
-    return dateStr;
+  if (!dateStr) return '';
+  let s = String(dateStr).trim();
+  if (!s.endsWith('Z') && !/[+-]\d{2}:?\d{2}$/.test(s)) {
+    s = s.replace(' ', 'T') + 'Z';
   }
+  const d = new Date(s);
+  if (isNaN(d.getTime())) return dateStr;
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const hours = String(d.getHours()).padStart(2, '0');
+  const minutes = String(d.getMinutes()).padStart(2, '0');
+  return `${day}/${month} ${hours}:${minutes} hs`;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

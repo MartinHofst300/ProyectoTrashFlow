@@ -14,10 +14,45 @@
  *   - requestAPI(): Wrapper de fetch para hacer llamadas HTTP y manejar la expiración del token (401).
  */
 
-// URL base para conectar con el servidor de la API de Flask en producción.
-const BASE_URL = 'https://trashflow.site';
+// Determina automáticamente la URL de la API:
+// - Si se ejecuta en localhost o 127.0.0.1 (desarrollo local XAMPP / Live Server): usa http://127.0.0.1:5005
+// - Si se ejecuta en producción (trashflow.site / Nginx Proxy / Hosting): usa ruta relativa ('')
+//   para que las peticiones vayan directo a /api/... y Nginx Proxy Manager las reenvíe al contenedor trashflow-api:5005
+const isLocalhost = typeof window !== 'undefined' && (
+  window.location.hostname === 'localhost' || 
+  window.location.hostname === '127.0.0.1' || 
+  window.location.protocol === 'file:'
+);
+
+const BASE_URL = isLocalhost ? 'http://127.0.0.1:5005' : '';
 
 const USE_MOCK = false; 
+
+/**
+ * Resuelve la URL correcta para una foto de alerta o evidencia.
+ * En localhost utiliza el servidor Flask en el puerto 5005.
+ * En producción rutea por /api/static/... para que Flask sirva la imagen
+ * o aplique el fallback automático al placeholder si el archivo huérfano no existe.
+ */
+function resolveFotoUrl(fotoPath) {
+  if (!fotoPath) {
+    return getFotoPlaceholder();
+  }
+  const clean = fotoPath.startsWith('/') ? fotoPath.substring(1) : fotoPath;
+  if (isLocalhost) {
+    return `http://127.0.0.1:5005/${clean}`;
+  }
+  if (clean.startsWith('static/')) {
+    return `/api/${clean}`;
+  }
+  return `/${clean}`;
+}
+
+function getFotoPlaceholder() {
+  return isLocalhost
+    ? 'http://127.0.0.1:5005/static/fotos/detecciones/deteccion_20260915_224219_cam1_conf86.jpg'
+    : '/api/static/fotos/detecciones/deteccion_20260915_224219_cam1_conf86.jpg';
+} 
 
 
 
@@ -81,9 +116,9 @@ async function requestAPI(endpoint, options = {}) {
     // Retorna la respuesta serializada en un objeto JS
     return await response.json();
   } catch (error) {
-    // Captura específicamente errores de conexión física (cuando la API no responde)
+    // Captura específicamente errores de conexión física (cuando la API o el proxy no responden)
     if (error.message && (error.message.includes('Failed to fetch') || error.message.includes('NetworkError') || error.message.includes('Load failed'))) {
-      console.error('Error de conexión: No se pudo conectar con la API en https://trashflow.site. Por favor, asegúrate de que el servidor esté activo y accesible.');
+      console.error('Error de conexión: No se pudo conectar con la API de TrashFlow (puerto 5005 / proxy). Por favor, asegurate de que el backend o el host proxy estén activos.');
     }
     console.error('API Error:', error);
     throw error;

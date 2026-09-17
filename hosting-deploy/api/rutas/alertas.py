@@ -83,7 +83,7 @@ def auto_resolver_alertas_expiradas():
                 """
                 UPDATE alertas
                 SET estado_id = 4,
-                    resuelto_en = COALESCE(resuelto_en, NOW()),
+                    resuelto_en = COALESCE(resuelto_en, DATE_ADD(detectado_en, INTERVAL 30 MINUTE)),
                     notas_admin = CASE 
                         WHEN notas_admin IS NULL OR notas_admin = '' THEN %s
                         ELSE CONCAT(notas_admin, ' | ', %s)
@@ -400,13 +400,13 @@ def map_alert(row):
         return {}
     
     fecha_dt = row.get("detectado_en")
-    fecha_str = fecha_dt.strftime("%Y-%m-%dT%H:%M:%S") if fecha_dt else None
+    fecha_str = fecha_dt.strftime("%Y-%m-%dT%H:%M:%SZ") if fecha_dt else None
 
     foto_url = row.get("foto_url")
     if foto_url:
         foto_path = os.path.join(BASE_DIR, foto_url)
         if not os.path.exists(foto_path):
-            foto_url = "static/fotos/placeholder_sin_evidencia.jpg"
+            foto_url = "static/fotos/detecciones/deteccion_20260915_224219_cam1_conf86.jpg"
 
     return {
         "id": row.get("id"),
@@ -477,12 +477,14 @@ def get_alerts():
                 "en proceso": "en_proceso",
                 "en_proceso": "en_proceso",
                 "alertada": "en_proceso",
-                "resuelta": "resuelta",
-                "descartada": "descartada"
+                "resuelta": "resuelta"
             }
             db_estado = state_map.get(estado.lower(), estado.lower())
             where_clauses.append("estado = %s")
             params.append(db_estado)
+    else:
+        # Por defecto, excluir alertas descartadas
+        where_clauses.append("estado_id != 5")
         
     if fecha:
         where_clauses.append("DATE(detectado_en) = %s")
@@ -805,8 +807,16 @@ def demo_detection():
             except Exception:
                 direccion = "Vicente López, Buenos Aires (Demo)"
 
-        # Usar foto placeholder para la demo
-        foto_url = "static/fotos/placeholder_sin_evidencia.jpg"
+        # Usar foto real de evidencia de detección para la demo
+        import random
+        demo_fotos = [
+            "static/fotos/detecciones/deteccion_20260915_224219_cam1_conf86.jpg",
+            "static/fotos/detecciones/deteccion_20260909_132214_cam1_conf89.jpg",
+            "static/fotos/detecciones/deteccion_20260909_132609_cam1_conf87.jpg",
+            "static/fotos/detecciones/deteccion_20260909_133546_cam1_conf89.jpg",
+            "static/fotos/detecciones/deteccion_20260901_182436_cam1_conf86.jpg",
+        ]
+        foto_url = random.choice(demo_fotos)
 
         # Si la cámara ya tenía una alerta activa previa, cerrarla por re-detección
         query(

@@ -152,11 +152,14 @@ async function loadAlertas() {
     // Limpia las animaciones de carga
     tableBody.innerHTML = '';
 
-    // Maneja el caso de resultados vacíos
-    if (!data.alertas || data.alertas.length === 0) {
+    // Filtrar alertas descartadas para que no se muestren en la tabla
+    data.alertas = (data.alertas || []).filter(a => a.estado !== 'descartada');
+
+    // Maneja el caso de resultados vacíos tras filtrar
+    if (data.alertas.length === 0) {
       tableBody.innerHTML = `
         <tr>
-          <td colspan="7" class="text-center" style="padding: var(--spacing-xl); color: var(--color-text-secondary);">
+          <td colspan="6" class="text-center" style="padding: var(--spacing-xl); color: var(--color-text-secondary);">
             No se encontraron alertas con los filtros especificados.
           </td>
         </tr>
@@ -172,8 +175,7 @@ async function loadAlertas() {
       asignada: { label: 'Alertada', badgeClass: 'badge-alertada' },
       en_proceso: { label: 'Alertada', badgeClass: 'badge-alertada' },
       alertada: { label: 'Alertada', badgeClass: 'badge-alertada' },
-      resuelta: { label: 'Resuelta', badgeClass: 'badge-resuelta' },
-      descartada: { label: 'Descartada', badgeClass: 'badge-descartada' }
+      resuelta: { label: 'Resuelta', badgeClass: 'badge-resuelta' }
     };
 
     const thirtyMinMs = 30 * 60 * 1000;
@@ -181,13 +183,19 @@ async function loadAlertas() {
 
     // Renderiza cada fila de alerta
     data.alertas.forEach(alert => {
-      let stateObj = statesMap[alert.estado] || { label: alert.estado, badgeClass: 'badge-descartada' };
+      let stateObj = statesMap[alert.estado] || { label: alert.estado, badgeClass: 'badge-alertada' };
       const formattedDate = formatDateTime(alert.fecha);
       const operatorHtml = getOperatorDisplay(alert.operador, alert.id, alert.estado);
-      const actionHtml = getActionHtml(alert.operador, alert.id, alert.estado);
 
       // Comprobación de ventana de 30 minutos de suspensión de cámara
-      const alertTime = alert.fecha ? new Date(alert.fecha.replace(/-/g, '/')).getTime() : 0;
+      let alertTime = 0;
+      if (alert.fecha) {
+        let fStr = String(alert.fecha).trim();
+        if (!fStr.endsWith('Z') && !/[+-]\d{2}:?\d{2}$/.test(fStr)) {
+          fStr = fStr.replace(' ', 'T') + 'Z';
+        }
+        alertTime = new Date(fStr).getTime();
+      }
       const diffMs = alertTime ? (nowMs - alertTime) : 0;
       let suspensionHtml = '';
 
@@ -230,7 +238,7 @@ async function loadAlertas() {
 
       row.innerHTML = `
         <td>
-          <img src="${BASE_URL}/${alert.foto}" class="table-thumbnail alert-thumb" alt="Evidencia" data-id="${alert.id}" onerror="this.onerror=null;this.src='${BASE_URL}/static/fotos/placeholder_sin_evidencia.jpg'">
+          <img src="${resolveFotoUrl(alert.foto)}" class="table-thumbnail alert-thumb" alt="Evidencia" data-id="${alert.id}" onerror="this.onerror=null;this.src=getFotoPlaceholder()">
         </td>
         <td>
           <div style="font-weight: 600; font-size: 14px;">${alert.zona}</div>
@@ -248,9 +256,6 @@ async function loadAlertas() {
         </td>
         <td>
           ${operatorHtml}
-        </td>
-        <td>
-          ${actionHtml}
         </td>
       `;
 
@@ -373,7 +378,6 @@ function renderTableSkeletons() {
           <div class="skeleton" style="height: 12px; width: 70px;"></div>
         </div>
       </td>
-      <td><div class="skeleton" style="height: 30px; width: 30px; border-radius: 4px;"></div></td>
     `;
     tableBody.appendChild(row);
   }
@@ -479,11 +483,15 @@ function buildPagination(totalPages) {
 }
 
 /**
- * Helper para formatear fechas a representación humanizada.
+ * Helper para formatear fechas a representación humanizada (Argentina UTC-3).
  */
 function formatDateTime(dateStr) {
   if (!dateStr) return '';
-  const date = new Date(dateStr);
+  let iso = String(dateStr).trim();
+  if (!iso.endsWith('Z') && !/[+-]\d{2}:?\d{2}$/.test(iso)) {
+    iso = iso.replace(' ', 'T') + 'Z';
+  }
+  const date = new Date(iso);
   if (isNaN(date.getTime())) return dateStr;
 
   const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];

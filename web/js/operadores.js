@@ -17,10 +17,36 @@
  *   - openEditModal(): Precarga información para edición.
  */
 
+let listaOperadoresGlobal = [];
+
 document.addEventListener('DOMContentLoaded', () => {
   loadOperadores();       // Realiza la carga de la tabla de operarios
   initOperadoresModals(); // Inicializa los listeners de los modales de creación y edición
+  initFiltroZona();       // Inicializa el selector de filtrado por zona
 });
+
+function initFiltroZona() {
+  const filtroZona = document.getElementById('filtro-zona-operador');
+  if (filtroZona) {
+    filtroZona.addEventListener('change', () => {
+      aplicarFiltroZona();
+    });
+  }
+}
+
+function aplicarFiltroZona() {
+  const grid = document.getElementById('operadores-grid');
+  if (!grid) return;
+
+  const filtroZona = document.getElementById('filtro-zona-operador');
+  const zonaId = filtroZona ? filtroZona.value : '';
+
+  const filtrados = zonaId 
+    ? listaOperadoresGlobal.filter(op => String(op.zona_id) === String(zonaId))
+    : listaOperadoresGlobal;
+
+  renderOperadores(filtrados);
+}
 
 // Paleta de colores para avatares (basada en el índice del operario)
 const AVATAR_COLORS = [
@@ -43,7 +69,7 @@ function getInitials(nombre, apellido) {
 }
 
 /**
- * Consulta la API y renderiza las tarjetas de operadores.
+ * Consulta la API y actualiza la lista global de operadores.
  */
 async function loadOperadores() {
   const grid = document.getElementById('operadores-grid');
@@ -53,105 +79,8 @@ async function loadOperadores() {
 
   try {
     const data = await requestAPI('/api/operadores');
-
-    if (!data || data.length === 0) {
-      grid.innerHTML = '<div class="empty-state"><p>No hay operadores registrados aún.</p></div>';
-      return;
-    }
-
-    grid.innerHTML = '';
-
-    data.forEach((op, idx) => {
-      const nombreCompleto = `${op.nombre} ${op.apellido}`;
-      const iniciales = getInitials(op.nombre, op.apellido);
-      const [colorA, colorB] = AVATAR_COLORS[idx % AVATAR_COLORS.length];
-
-      const badgeClass  = op.activo ? 'badge-activo'    : 'badge-inactivo';
-      const badgeText   = op.activo ? 'Activo'          : 'Inactivo';
-      const cardClass   = op.activo ? 'operador-card'   : 'operador-card inactivo';
-
-      const toggleLabel = op.activo ? 'Desactivar' : 'Activar';
-      const toggleClass = op.activo ? 'btn-action btn-toggle-off' : 'btn-action btn-toggle-on';
-      const toggleIcon  = op.activo
-        ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>`
-        : `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>`;
-      const nuevoEstado = op.activo ? 0 : 1;
-
-      const zonaBadge = op.zona_nombre
-        ? `<span class="zona-badge">📍 ${escapeHTML(op.zona_nombre)}</span>`
-        : `<span class="zona-badge-empty">Sin zona asignada</span>`;
-
-      const telefono = op.telefono || '<span style="font-style:italic;opacity:0.5">Sin registro</span>';
-
-      const alertasActivas = op.alertas_activas || 0;
-      const resueltas      = op.resueltas_hoy   || 0;
-
-      const card = document.createElement('div');
-      card.className = cardClass;
-      // Mostrar DNI y/o zona como subtítulo de la tarjeta
-      const subtituloMeta = op.dni
-        ? `<div class="operador-email">DNI: ${escapeHTML(op.dni)}</div>`
-        : `<div class="operador-email" style="opacity:0.4;font-style:italic">Sin DNI registrado</div>`;
-
-      card.innerHTML = `
-        <div class="card-header-row">
-          <div class="operador-avatar"
-               style="background: linear-gradient(135deg, ${colorA}, ${colorB})">
-            ${iniciales}
-          </div>
-          <div class="operador-meta">
-            <div class="operador-nombre">${escapeHTML(nombreCompleto)}</div>
-            ${subtituloMeta}
-          </div>
-          <span class="badge ${badgeClass}">${badgeText}</span>
-        </div>
-
-        <div class="card-details">
-          <div class="card-detail-item">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 3.07 5.18 2 2 0 0 1 5.05 3h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L9.09 10.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 23 18z"/></svg>
-            ${telefono}
-          </div>
-          <div class="card-detail-item">
-            ${zonaBadge}
-          </div>
-        </div>
-
-        <div class="card-stats">
-          <div class="stat-block">
-            <div class="stat-value ${alertasActivas > 0 ? 'active' : ''}">${alertasActivas}</div>
-            <div class="stat-label">Alertas activas</div>
-          </div>
-          <div class="stat-block">
-            <div class="stat-value">${resueltas}</div>
-            <div class="stat-label">Resueltas hoy</div>
-          </div>
-        </div>
-
-        <div class="card-actions">
-          <button class="btn-action btn-edit"
-                  onclick="openEditModal(${op.id})"
-                  title="Editar">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            Editar
-          </button>
-          <button class="${toggleClass}"
-                  onclick="toggleEstadoOperador(${op.id}, ${nuevoEstado})"
-                  title="${toggleLabel}">
-            ${toggleIcon}
-            ${toggleLabel}
-          </button>
-          <button class="btn-action btn-delete"
-                  onclick="confirmDeleteOperador(${op.id}, '${escapeHTML(nombreCompleto)}')"
-                  title="Dar de baja">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-            Baja
-          </button>
-        </div>
-      `;
-
-      grid.appendChild(card);
-    });
-
+    listaOperadoresGlobal = data || [];
+    aplicarFiltroZona();
   } catch (error) {
     console.error('Error al cargar operadores:', error);
     grid.innerHTML = `
@@ -162,6 +91,112 @@ async function loadOperadores() {
       </div>
     `;
   }
+}
+
+/**
+ * Renderiza el listado de tarjetas de operadores recibido por parámetro.
+ */
+function renderOperadores(data) {
+  const grid = document.getElementById('operadores-grid');
+  if (!grid) return;
+
+  if (!data || data.length === 0) {
+    grid.innerHTML = '<div class="empty-state"><p>No se encontraron operadores para esta zona.</p></div>';
+    return;
+  }
+
+  grid.innerHTML = '';
+
+  data.forEach((op, idx) => {
+    const nombreCompleto = `${op.nombre} ${op.apellido}`;
+    const iniciales = getInitials(op.nombre, op.apellido);
+    const [colorA, colorB] = AVATAR_COLORS[idx % AVATAR_COLORS.length];
+
+    const badgeClass  = op.activo ? 'badge-activo'    : 'badge-inactivo';
+    const badgeText   = op.activo ? 'Activo'          : 'Inactivo';
+    const cardClass   = op.activo ? 'operador-card'   : 'operador-card inactivo';
+
+    const toggleLabel = op.activo ? 'Desactivar' : 'Activar';
+    const toggleClass = op.activo ? 'btn-action btn-toggle-off' : 'btn-action btn-toggle-on';
+    const toggleIcon  = op.activo
+      ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>`
+      : `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>`;
+    const nuevoEstado = op.activo ? 0 : 1;
+
+    const zonaBadge = op.zona_nombre
+      ? `<span class="zona-badge">📍 ${escapeHTML(op.zona_nombre)}</span>`
+      : `<span class="zona-badge-empty">Sin zona asignada</span>`;
+
+    const telefono = op.telefono || '<span style="font-style:italic;opacity:0.5">Sin registro</span>';
+
+    const alertasActivas = op.alertas_activas || 0;
+    const resueltas      = op.resueltas_hoy   || 0;
+
+    const card = document.createElement('div');
+    card.className = cardClass;
+    // Mostrar DNI y/o zona como subtítulo de la tarjeta
+    const subtituloMeta = op.dni
+      ? `<div class="operador-email">DNI: ${escapeHTML(op.dni)}</div>`
+      : `<div class="operador-email" style="opacity:0.4;font-style:italic">Sin DNI registrado</div>`;
+
+    card.innerHTML = `
+      <div class="card-header-row">
+        <div class="operador-avatar"
+             style="background: linear-gradient(135deg, ${colorA}, ${colorB})">
+          ${iniciales}
+        </div>
+        <div class="operador-meta">
+          <div class="operador-nombre">${escapeHTML(nombreCompleto)}</div>
+          ${subtituloMeta}
+        </div>
+        <span class="badge ${badgeClass}">${badgeText}</span>
+      </div>
+
+      <div class="card-details">
+        <div class="card-detail-item">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 3.07 5.18 2 2 0 0 1 5.05 3h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L9.09 10.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 23 18z"/></svg>
+          ${telefono}
+        </div>
+        <div class="card-detail-item">
+          ${zonaBadge}
+        </div>
+      </div>
+
+      <div class="card-stats">
+        <div class="stat-block">
+          <div class="stat-value ${alertasActivas > 0 ? 'active' : ''}">${alertasActivas}</div>
+          <div class="stat-label">Alertas activas</div>
+        </div>
+        <div class="stat-block">
+          <div class="stat-value">${resueltas}</div>
+          <div class="stat-label">Resueltas hoy</div>
+        </div>
+      </div>
+
+      <div class="card-actions">
+        <button class="btn-action btn-edit"
+                onclick="openEditModal(${op.id})"
+                title="Editar">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Editar
+        </button>
+        <button class="${toggleClass}"
+                onclick="toggleEstadoOperador(${op.id}, ${nuevoEstado})"
+                title="${toggleLabel}">
+          ${toggleIcon}
+          ${toggleLabel}
+        </button>
+        <button class="btn-action btn-delete"
+                onclick="confirmDeleteOperador(${op.id}, '${escapeHTML(nombreCompleto)}')"
+                title="Dar de baja">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          Baja
+        </button>
+      </div>
+    `;
+
+    grid.appendChild(card);
+  });
 }
 
 /**
@@ -275,46 +310,51 @@ function initOperadoresModals() {
     });
   }
 
-  // Lógica de máscara y formato automático del teléfono (+54 6digitos-4digitos)
-  const telInput = document.getElementById('op-telefono');
-  if (telInput) {
-    // Bloquear letras, símbolos y caracteres inválidos al tipear
-    telInput.addEventListener('keypress', (e) => {
-      // Permitir sólo números, signo + y guion
-      if (e.key !== 'Enter' && !/[0-9+\-]/.test(e.key)) {
-        e.preventDefault();
-      }
-    });
+  // Restricciones en tiempo real para creación y edición
+  // 1. Nombre y Apellido: sólo letras (con tildes/eñes) y espacios
+  ['op-nombre', 'op-apellido', 'edit-op-nombre', 'edit-op-apellido'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('input', () => {
+        el.value = el.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, '');
+      });
+    }
+  });
 
-    telInput.addEventListener('input', () => {
-      let val = telInput.value;
+  // 2. DNI: sólo números (dígitos 0-9)
+  ['op-dni', 'edit-op-dni'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('input', () => {
+        el.value = el.value.replace(/\D/g, '');
+      });
+    }
+  });
 
-      // Si empieza con "+54 ", aplicamos la lógica de formateo con guion
+  // 3. Lógica de máscara y formato para teléfono (+54 y números)
+  ['op-telefono', 'edit-op-telefono'].forEach(id => {
+    const tel = document.getElementById(id);
+    if (!tel) return;
+
+    tel.addEventListener('input', () => {
+      let val = tel.value;
       if (val.startsWith('+54 ')) {
         const prefix = '+54 ';
         const rest = val.substring(4);
-        
-        // Limpiar para dejar solo dígitos en la parte del usuario
         const digits = rest.replace(/\D/g, '');
-        
         let formatted = '';
         if (digits.length > 6) {
           formatted = digits.substring(0, 6) + '-' + digits.substring(6, 10);
         } else {
           formatted = digits;
         }
-        telInput.value = prefix + formatted;
-      } else if (val.startsWith('+54')) {
-        // Permitir borrar hasta "+54" o "+5" o "+" sin forzar
-        // No forzamos, solo limpiamos caracteres no válidos
-        telInput.value = val.replace(/[^\d+-]/g, '');
+        tel.value = prefix + formatted;
       } else {
-        // Si borró el prefijo o escribe otro código de país
-        // Permitimos que escriba libremente pero limpiamos letras y caracteres no numéricos (excepto + y -)
-        telInput.value = val.replace(/[^\d+-]/g, '');
+        // Limpiar cualquier letra o símbolo no válido
+        tel.value = val.replace(/[^\d+\-\s]/g, '');
       }
     });
-  }
+  });
 
   if (btnCancelarCrear) btnCancelarCrear.addEventListener('click', cerrarCrear);
   if (btnCloseCrear) btnCloseCrear.addEventListener('click', cerrarCrear);

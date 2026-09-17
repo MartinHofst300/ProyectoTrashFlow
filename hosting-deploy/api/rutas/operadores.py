@@ -18,6 +18,7 @@ Dependencias:
   - api.database (query)
 """
 
+import re
 import bcrypt
 import secrets
 import string
@@ -42,10 +43,17 @@ def get_operadores():
     if claims.get("rol") != "admin":
         return jsonify({"error": "No autorizado", "mensaje": "Se requieren privilegios de administrador"}), 403
 
+    zona_id = request.args.get('zona_id')
     try:
-        operadores = query(
-            "SELECT * FROM vista_operadores WHERE eliminado_en IS NULL ORDER BY nombre"
-        )
+        if zona_id:
+            operadores = query(
+                "SELECT * FROM vista_operadores WHERE eliminado_en IS NULL AND zona_id = %s ORDER BY nombre",
+                (zona_id,)
+            )
+        else:
+            operadores = query(
+                "SELECT * FROM vista_operadores WHERE eliminado_en IS NULL ORDER BY nombre"
+            )
         
         # Serialización de campos datetime y date para JSON
         for o in operadores:
@@ -127,6 +135,18 @@ def create_operador():
 
     if not all([nombre, apellido]):
         return jsonify({"error": "Campos incompletos", "mensaje": "Nombre y apellido son obligatorios"}), 400
+
+    if not re.match(r'^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$', nombre.strip()):
+        return jsonify({"error": "Formato inválido", "mensaje": "El nombre solo puede contener letras y espacios"}), 400
+
+    if not re.match(r'^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$', apellido.strip()):
+        return jsonify({"error": "Formato inválido", "mensaje": "El apellido solo puede contener letras y espacios"}), 400
+
+    if dni and dni.strip() and not re.match(r'^\d+$', dni.strip()):
+        return jsonify({"error": "Formato inválido", "mensaje": "El DNI solo puede contener números"}), 400
+
+    if telefono and telefono.strip() and not re.match(r'^[\+0-9\s\-]+$', telefono.strip()):
+        return jsonify({"error": "Formato inválido", "mensaje": "El teléfono solo puede contener números y prefijo telefónico"}), 400
 
     # Validar formato de fecha de nacimiento si se proporcionó
     if fecha_nacimiento is not None:
@@ -224,15 +244,21 @@ def update_operador(operador_id):
     params = []
 
     if nombre is not None:
+        if not re.match(r'^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$', nombre.strip()):
+            return jsonify({"error": "Formato inválido", "mensaje": "El nombre solo puede contener letras y espacios"}), 400
         set_clauses.append("nombre = %s")
         params.append(nombre.strip())
     if apellido is not None:
+        if not re.match(r'^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$', apellido.strip()):
+            return jsonify({"error": "Formato inválido", "mensaje": "El apellido solo puede contener letras y espacios"}), 400
         set_clauses.append("apellido = %s")
         params.append(apellido.strip())
     if dni is not None:
         # Permitir limpiar el DNI enviando cadena vacía
         dni_val = dni.strip() if dni.strip() else None
         if dni_val:
+            if not re.match(r'^\d+$', dni_val):
+                return jsonify({"error": "Formato inválido", "mensaje": "El DNI solo puede contener números"}), 400
             dup = query("SELECT id FROM usuarios WHERE dni = %s AND id != %s AND eliminado_en IS NULL", (dni_val, operador_id))
             if dup:
                 return jsonify({"error": "DNI duplicado", "mensaje": "Ya existe otro operador con ese DNI"}), 409
@@ -250,8 +276,11 @@ def update_operador(operador_id):
         else:
             set_clauses.append("fecha_nacimiento = NULL")
     if telefono is not None:
+        tel_val = telefono.strip() if telefono.strip() else None
+        if tel_val and not re.match(r'^[\+0-9\s\-]+$', tel_val):
+            return jsonify({"error": "Formato inválido", "mensaje": "El teléfono solo puede contener números y prefijo telefónico"}), 400
         set_clauses.append("telefono = %s")
-        params.append(telefono.strip() if telefono.strip() else None)
+        params.append(tel_val)
     if zona_id is not None:
         try:
             zona_id = int(zona_id)
